@@ -50,7 +50,7 @@ async function callForecast(
 ): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
   const apiKey = process.env.AI_API_KEY;
   if (!apiKey) throw new Error("AI_API_KEY mancante");
-  const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: true });
+  const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: false });
   const model = gateway(MODEL);
 
   const tail = candles.slice(-120);
@@ -59,7 +59,7 @@ async function callForecast(
   const last = candles[candles.length - 1];
   const stepSec = intervalSeconds(interval);
 
-  const prompt = `Sei un analista tecnico. Dato lo storico OHLC del titolo ${symbol} (intervallo ${interval}) e un riassunto degli indicatori, produci una PREVISIONE di ${horizon} candele future consecutive.
+  const prompt = `Sei un analista tecnico. Dato lo storico OHLC del titolo ${symbol} (intervallo ${interval}) e un riassunto degli indicatori, produci una PREVISIONE di ${horizon} candele future consecutive. Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (nessun testo prima o dopo), con questa forma: {"candles": [{"time": number, "open": number, "high": number, "low": number, "close": number}, ...], "rationale": string, "confidence": number}.
 
 Rispetta queste regole:
 - Genera esattamente ${horizon} candele.

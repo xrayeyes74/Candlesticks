@@ -9,15 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ChartRouteImport } from './routes/chart'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenticated/predictions'
+import { Route as AuthenticatedManualRouteImport } from './routes/_authenticated/manual'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBacktestSymbolRouteImport } from './routes/_authenticated/backtest/$symbol'
 import { Route as AuthenticatedAnalyzeSymbolRouteImport } from './routes/_authenticated/analyze/$symbol'
-import { Route as AuthenticatedManualRouteImport } from './routes/_authenticated/manual'
 
+const ChartRoute = ChartRouteImport.update({
+  id: '/chart',
+  path: '/chart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -38,6 +44,11 @@ const AuthenticatedPredictionsRoute =
     path: '/predictions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManualRoute = AuthenticatedManualRouteImport.update({
+  id: '/manual',
+  path: '/manual',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -55,80 +66,89 @@ const AuthenticatedAnalyzeSymbolRoute =
     path: '/analyze/$symbol',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedManualRoute = AuthenticatedManualRouteImport.update({
-  id: '/manual',
-  path: '/manual',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/chart': typeof ChartRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/manual': typeof AuthenticatedManualRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
-  '/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/chart': typeof ChartRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/manual': typeof AuthenticatedManualRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
-  '/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/chart': typeof ChartRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/manual': typeof AuthenticatedManualRoute
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
   '/_authenticated/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/_authenticated/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
-  '/_authenticated/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/chart'
     | '/dashboard'
+    | '/manual'
     | '/predictions'
     | '/analyze/$symbol'
     | '/backtest/$symbol'
-    | '/manual'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/chart'
     | '/dashboard'
+    | '/manual'
     | '/predictions'
     | '/analyze/$symbol'
     | '/backtest/$symbol'
-    | '/manual'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/chart'
     | '/_authenticated/dashboard'
+    | '/_authenticated/manual'
     | '/_authenticated/predictions'
     | '/_authenticated/analyze/$symbol'
     | '/_authenticated/backtest/$symbol'
-    | '/_authenticated/manual'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ChartRoute: typeof ChartRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/chart': {
+      id: '/chart'
+      path: '/chart'
+      fullPath: '/chart'
+      preLoaderRoute: typeof ChartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -157,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPredictionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manual': {
+      id: '/_authenticated/manual'
+      path: '/manual'
+      fullPath: '/manual'
+      preLoaderRoute: typeof AuthenticatedManualRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -178,30 +205,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyzeSymbolRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/manual': {
-      id: '/_authenticated/manual'
-      path: '/manual'
-      fullPath: '/manual'
-      preLoaderRoute: typeof AuthenticatedManualRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedManualRoute: typeof AuthenticatedManualRoute
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
   AuthenticatedAnalyzeSymbolRoute: typeof AuthenticatedAnalyzeSymbolRoute
   AuthenticatedBacktestSymbolRoute: typeof AuthenticatedBacktestSymbolRoute
-  AuthenticatedManualRoute: typeof AuthenticatedManualRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedManualRoute: AuthenticatedManualRoute,
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
   AuthenticatedAnalyzeSymbolRoute: AuthenticatedAnalyzeSymbolRoute,
   AuthenticatedBacktestSymbolRoute: AuthenticatedBacktestSymbolRoute,
-  AuthenticatedManualRoute: AuthenticatedManualRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -211,6 +231,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ChartRoute: ChartRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

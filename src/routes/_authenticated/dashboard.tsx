@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listWatchlist, addWatchlist, removeWatchlist, listPredictions } from "@/lib/forecast.functions";
 import { searchSymbols } from "@/lib/market.functions";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Search, Plus, X, TrendingUp, ArrowRight } from "lucide-react";
 
@@ -28,9 +28,16 @@ function Dashboard() {
   const [results, setResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
 
-  async function runSearch(v: string) {
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function onSearchInput(v: string) {
     setQ(v);
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     if (v.length < 1) { setResults([]); return; }
+    searchTimer.current = setTimeout(() => runSearch(v), 400);
+  }
+
+  async function runSearch(v: string) {
     setSearching(true);
     try {
       const r = await search({ data: { q: v } });
@@ -59,7 +66,7 @@ function Dashboard() {
         <label className="text-xs text-muted-foreground">Cerca titolo (ticker o nome)</label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={q} onChange={(e) => runSearch(e.target.value)} placeholder="AAPL, Tesla, ENI.MI ..." className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2.5 text-sm" />
+          <input value={q} onChange={(e) => onSearchInput(e.target.value)} placeholder="AAPL, Tesla, ENI.MI ..." className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2.5 text-sm" />
         </div>
         {q && (
           <div className="mt-3 divide-y divide-border/60">
