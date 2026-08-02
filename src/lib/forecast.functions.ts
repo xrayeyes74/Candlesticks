@@ -3,13 +3,11 @@ import { z } from "zod";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createAiProvider } from "./ai-gateway.server";
+import { fetchHistory } from "./market-data.server";
 import { summarize } from "./ta/indicators";
 import { detectPatterns } from "./ta/patterns";
 import type { Candle } from "./ta/types";
 
-// Defaults target Groq's free OpenAI-compatible tier (no credit card required) so the
-// app works out of the box at zero cost. Override via env vars to point at OpenAI,
-// Anthropic through a compatible proxy, OpenRouter, Cerebras, etc.
 const MODEL = process.env.AI_MODEL || "llama-3.3-70b-versatile";
 const AI_BASE_URL = process.env.AI_BASE_URL || "https://api.groq.com/openai/v1";
 
@@ -79,11 +77,21 @@ ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.t
       model,
       output: Output.object({ schema: ForecastSchema }),
       prompt,
+      maxOutputTokens: 4096,
     });
     return normalize(output, last, stepSec, horizon);
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
       const parsed = tryParseJson(error.text ?? "");
+      if (parsed) return normalize(parsed, last, stepSec, horizon);
+    }
+    const raw =
+      (error as any)?.data?.error?.failed_generation ??
+      (error as any)?.responseBody ??
+      (error as any)?.cause?.responseBody ??
+      (error as any)?.text;
+    if (typeof raw === "string") {
+      const parsed = tryParseJson(raw);
       if (parsed) return normalize(parsed, last, stepSec, horizon);
     }
     throw error;
@@ -132,28 +140,12 @@ export const generateForecast = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => ForecastInput.parse(raw))
   .handler(async ({ data }) => {
-    const { fetchCandles } = await import("./market.functions");
-    // Reuse fetch logic via internal call — but calling a serverFn from another server needs helper; inline fetch instead:
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(data.symbol)}?interval=${data.interval}&range=${data.range}`;
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-    if (!res.ok) throw new Error(`Yahoo Finance ${res.status}`);
-    const j = await res.json() as any;
-    if (j.chart.error) throw new Error(j.chart.error.description);
-    const r = j.chart.result[0];
-    const q = r.indicators.quote[0];
-    const candles: Candle[] = [];
-    for (let i = 0; i < r.timestamp.length; i++) {
-      if (q.open[i] == null || q.close[i] == null) continue;
-      candles.push({ time: r.timestamp[i], open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i], volume: q.volume[i] ?? 0 });
-    }
+    const candles = await fetchHistory(data.symbol, data.interval, data.range);
     if (candles.length < 30) throw new Error("Storico troppo corto");
     const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon);
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
-    void fetchCandles;
   });
 
-// Same as generateForecast, but for candles the user typed in by hand (e.g. reading
-// them off a chart image) instead of fetching from Yahoo. No network call to Yahoo here.
 const ManualCandleSchema = CandleSchema.extend({ volume: z.number().min(0).default(0) });
 const ForecastFromCandlesInput = z.object({
   symbol: z.string().min(1).max(40).transform((s) => s.trim().toUpperCase()),
@@ -239,17 +231,7 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
     const predicted = pred.predicted_candles as unknown as Candle[];
     const stepSec = intervalSeconds(pred.interval);
     const range = pred.interval === "1h" ? "3mo" : pred.interval === "1wk" ? "5y" : "2y";
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(pred.symbol)}?interval=${pred.interval}&range=${range}`;
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!res.ok) throw new Error("Impossibile scaricare i dati per la valutazione");
-    const j = await res.json() as any;
-    const r = j.chart.result[0];
-    const q = r.indicators.quote[0];
-    const all: Candle[] = [];
-    for (let i = 0; i < r.timestamp.length; i++) {
-      if (q.open[i] == null) continue;
-      all.push({ time: r.timestamp[i], open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i], volume: q.volume[i] ?? 0 });
-    }
+    const all = await fetchHistory(pred.symbol, pred.interval, range);
     const actual = all.filter((c) => c.time > pred.anchor_time && c.time <= pred.anchor_time + stepSec * pred.horizon_candles);
     if (actual.length === 0) {
       return { pending: true, actual_candles: [], mape: null, direction_correct: null, max_error: null };
@@ -262,14 +244,12 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
       if (err > maxErr) maxErr = err;
     }
     const mape = (sumPct / n) * 100;
-    const anchorClose = pred.anchor_time; // placeholder
-    // Direction: sign of (last predicted close - anchor implied close) vs (actual last close - actual first open)
+    const anchorClose = pred.anchor_time;
     const predDir = predicted[n - 1].close - predicted[0].open;
     const actDir = actual[n - 1].close - actual[0].open;
     const direction_correct = Math.sign(predDir) === Math.sign(actDir);
     void anchorClose;
 
-    // Upsert evaluation
     await context.supabase.from("prediction_evaluations").delete().eq("prediction_id", pred.id);
     const { data: ev, error: e2 } = await context.supabase.from("prediction_evaluations").insert({
       prediction_id: pred.id,
@@ -283,7 +263,7 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
 const BacktestInput = z.object({
   symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()),
   interval: z.enum(["1d", "1h", "1wk"]).default("1d"),
-  anchor_time: z.number(), // unix seconds
+  anchor_time: z.number(),
   horizon: z.number().int().min(3).max(60).default(10),
 });
 export const runBacktest = createServerFn({ method: "POST" })
@@ -291,18 +271,7 @@ export const runBacktest = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => BacktestInput.parse(raw))
   .handler(async ({ data }) => {
     const range = data.interval === "1h" ? "2y" : data.interval === "1wk" ? "max" : "10y";
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(data.symbol)}?interval=${data.interval}&range=${range}`;
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-    if (!res.ok) throw new Error("Yahoo Finance non raggiungibile");
-    const j = await res.json() as any;
-    if (j.chart.error) throw new Error(j.chart.error.description);
-    const r = j.chart.result[0];
-    const q = r.indicators.quote[0];
-    const all: Candle[] = [];
-    for (let i = 0; i < r.timestamp.length; i++) {
-      if (q.open[i] == null) continue;
-      all.push({ time: r.timestamp[i], open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i], volume: q.volume[i] ?? 0 });
-    }
+    const all = await fetchHistory(data.symbol, data.interval, range);
     const before = all.filter((c) => c.time <= data.anchor_time);
     const after = all.filter((c) => c.time > data.anchor_time).slice(0, data.horizon);
     if (before.length < 60) throw new Error("Serve più storico prima della data scelta");
