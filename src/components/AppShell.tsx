@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { CandlestickChart, LineChart, LayoutDashboard, History, LogOut, ImagePlus } from "lucide-react";
+import { CandlestickChart, LineChart, LayoutDashboard, History, LogOut, ImagePlus, Menu, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
@@ -9,6 +9,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const qc = useQueryClient();
   const [email, setEmail] = useState<string>("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
@@ -36,11 +37,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="flex items-center gap-3">
             <span className="hidden sm:block text-xs text-muted-foreground truncate max-w-[180px]">{email}</span>
-            <button onClick={signOut} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
+            <button onClick={signOut} className="hidden md:inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
               <LogOut className="h-3.5 w-3.5" /> Esci
+            </button>
+            <button
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              aria-label="Menu"
+              className="md:hidden inline-flex items-center justify-center rounded-md border border-border p-2 hover:bg-accent"
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
+        {mobileMenuOpen && (
+          <nav className="md:hidden border-t border-border/60 bg-background/95 px-4 py-2 flex flex-col gap-1 text-sm">
+            <NavLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>Dashboard</NavLink>
+            <NavLink to="/manual" icon={<ImagePlus className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>Inserimento manuale</NavLink>
+            <NavLink to="/predictions" icon={<History className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>Previsioni</NavLink>
+            <button onClick={signOut} className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-left hover:bg-accent">
+              <LogOut className="h-3.5 w-3.5" /> Esci
+            </button>
+          </nav>
+        )}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-muted-foreground">
@@ -51,9 +69,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function NavLink({ to, icon, children }: { to: string; icon: ReactNode; children: ReactNode }) {
+function NavLink({ to, icon, children, onClick }: { to: string; icon: ReactNode; children: ReactNode; onClick?: () => void }) {
   return (
-    <Link to={to} className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 hover:bg-accent [&.active]:bg-accent [&.active]:text-accent-foreground">
+    <Link to={to} onClick={onClick} className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 hover:bg-accent [&.active]:bg-accent [&.active]:text-accent-foreground">
       {icon}{children}
     </Link>
   );
