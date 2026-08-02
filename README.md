@@ -23,7 +23,8 @@ Applicazione full-stack per l'analisi di grafici candlestick con previsioni di p
 ### 📈 Interfaccia Utente
 - Grafici candlestick interattivi (lightweight-charts)
 - Visualizzazione indicatori tecnici sovrapposti
-- Ricerca simboli in tempo reale (Yahoo Finance)
+- Ricerca simboli con autocomplete (Yahoo Finance)
+- Dati storici e quotazioni **ritardati di ~15-20 minuti** (Yahoo Finance non offre dati realtime gratuiti)
 - Selezione timeframe (1h, 4h, 1d, 1wk)
 - Dashboard con storico predizioni
 - Watchlist personale

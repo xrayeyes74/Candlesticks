@@ -16,6 +16,7 @@ import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedBacktestSymbolRouteImport } from './routes/_authenticated/backtest/$symbol'
 import { Route as AuthenticatedAnalyzeSymbolRouteImport } from './routes/_authenticated/analyze/$symbol'
+import { Route as AuthenticatedManualRouteImport } from './routes/_authenticated/manual'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -54,6 +55,11 @@ const AuthenticatedAnalyzeSymbolRoute =
     path: '/analyze/$symbol',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedManualRoute = AuthenticatedManualRouteImport.update({
+  id: '/manual',
+  path: '/manual',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -62,6 +68,7 @@ export interface FileRoutesByFullPath {
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
+  '/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +77,7 @@ export interface FileRoutesByTo {
   '/predictions': typeof AuthenticatedPredictionsRoute
   '/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
+  '/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +88,7 @@ export interface FileRoutesById {
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
   '/_authenticated/analyze/$symbol': typeof AuthenticatedAnalyzeSymbolRoute
   '/_authenticated/backtest/$symbol': typeof AuthenticatedBacktestSymbolRoute
+  '/_authenticated/manual': typeof AuthenticatedManualRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/analyze/$symbol'
     | '/backtest/$symbol'
+    | '/manual'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -98,6 +108,7 @@ export interface FileRouteTypes {
     | '/predictions'
     | '/analyze/$symbol'
     | '/backtest/$symbol'
+    | '/manual'
   id:
     | '__root__'
     | '/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/_authenticated/predictions'
     | '/_authenticated/analyze/$symbol'
     | '/_authenticated/backtest/$symbol'
+    | '/_authenticated/manual'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -166,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyzeSymbolRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/manual': {
+      id: '/_authenticated/manual'
+      path: '/manual'
+      fullPath: '/manual'
+      preLoaderRoute: typeof AuthenticatedManualRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -174,6 +193,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
   AuthenticatedAnalyzeSymbolRoute: typeof AuthenticatedAnalyzeSymbolRoute
   AuthenticatedBacktestSymbolRoute: typeof AuthenticatedBacktestSymbolRoute
+  AuthenticatedManualRoute: typeof AuthenticatedManualRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -181,6 +201,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
   AuthenticatedAnalyzeSymbolRoute: AuthenticatedAnalyzeSymbolRoute,
   AuthenticatedBacktestSymbolRoute: AuthenticatedBacktestSymbolRoute,
+  AuthenticatedManualRoute: AuthenticatedManualRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

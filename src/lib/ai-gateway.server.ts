@@ -1,16 +1,22 @@
+/**
+ * Generic OpenAI-compatible AI provider.
+ *
+ * Works with OpenAI, Anthropic (via an OpenAI-compatible proxy), OpenRouter, Groq,
+ * or any other OpenAI-compatible endpoint — just change AI_BASE_URL / AI_API_KEY /
+ * AI_MODEL in your .env, no code changes needed.
+ */
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 
-export function createLovableAiGatewayProvider(
-  lovableApiKey: string,
-  options?: { structuredOutputs?: boolean },
+export function createAiProvider(
+  apiKey: string,
+  options?: { baseURL?: string; structuredOutputs?: boolean },
 ) {
   return createOpenAICompatible({
-    name: "lovable",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
+    name: "candlestick-ai",
+    baseURL: options?.baseURL || "https://api.openai.com/v1",
     supportsStructuredOutputs: options?.structuredOutputs ?? false,
     headers: {
-      "Lovable-API-Key": lovableApiKey,
-      "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+      Authorization: `Bearer ${apiKey}`,
     },
   });
 }

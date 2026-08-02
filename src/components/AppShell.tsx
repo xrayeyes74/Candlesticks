@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { CandlestickChart, LineChart, LayoutDashboard, History, LogOut } from "lucide-react";
+import { CandlestickChart, LineChart, LayoutDashboard, History, LogOut, ImagePlus } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
@@ -31,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <nav className="hidden md:flex items-center gap-1 text-sm">
             <NavLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>Dashboard</NavLink>
+            <NavLink to="/manual" icon={<ImagePlus className="h-4 w-4" />}>Inserimento manuale</NavLink>
             <NavLink to="/predictions" icon={<History className="h-4 w-4" />}>Previsioni</NavLink>
           </nav>
           <div className="flex items-center gap-3">

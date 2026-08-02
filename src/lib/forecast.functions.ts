@@ -2,12 +2,16 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { createAiProvider } from "./ai-gateway.server";
 import { summarize } from "./ta/indicators";
 import { detectPatterns } from "./ta/patterns";
 import type { Candle } from "./ta/types";
 
-const MODEL = "openai/gpt-5.5";
+// Defaults target Groq's free OpenAI-compatible tier (no credit card required) so the
+// app works out of the box at zero cost. Override via env vars to point at OpenAI,
+// Anthropic through a compatible proxy, OpenRouter, Cerebras, etc.
+const MODEL = process.env.AI_MODEL || "llama-3.3-70b-versatile";
+const AI_BASE_URL = process.env.AI_BASE_URL || "https://api.groq.com/openai/v1";
 
 const CandleSchema = z.object({
   time: z.number(),
@@ -25,8 +29,14 @@ const ForecastSchema = z.object({
 
 function intervalSeconds(interval: string): number {
   switch (interval) {
+    case "1m": return 60;
+    case "5m": return 5 * 60;
+    case "15m": return 15 * 60;
+    case "30m": return 30 * 60;
     case "1h": return 3600;
+    case "4h": return 4 * 3600;
     case "1wk": return 7 * 86400;
+    case "1mo": return 30 * 86400;
     case "1d":
     default: return 86400;
   }
@@ -38,9 +48,9 @@ async function callForecast(
   candles: Candle[],
   horizon: number,
 ): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY mancante");
-  const gateway = createLovableAiGatewayProvider(apiKey, { structuredOutputs: true });
+  const apiKey = process.env.AI_API_KEY;
+  if (!apiKey) throw new Error("AI_API_KEY mancante");
+  const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: true });
   const model = gateway(MODEL);
 
   const tail = candles.slice(-120);
@@ -140,6 +150,25 @@ export const generateForecast = createServerFn({ method: "POST" })
     const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon);
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
     void fetchCandles;
+  });
+
+// Same as generateForecast, but for candles the user typed in by hand (e.g. reading
+// them off a chart image) instead of fetching from Yahoo. No network call to Yahoo here.
+const ManualCandleSchema = CandleSchema.extend({ volume: z.number().min(0).default(0) });
+const ForecastFromCandlesInput = z.object({
+  symbol: z.string().min(1).max(40).transform((s) => s.trim().toUpperCase()),
+  interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
+  candles: z.array(ManualCandleSchema).min(15, "Servono almeno 15 candele per un'analisi minimamente affidabile"),
+  horizon: z.number().int().min(3).max(90).default(10),
+});
+
+export const generateForecastFromCandles = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw: unknown) => ForecastFromCandlesInput.parse(raw))
+  .handler(async ({ data }) => {
+    const candles = [...data.candles].sort((a, b) => a.time - b.time);
+    const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon);
+    return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
   });
 
 // Save prediction
