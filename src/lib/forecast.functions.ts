@@ -8,6 +8,9 @@ import { summarize } from "./ta/indicators";
 import { detectPatterns } from "./ta/patterns";
 import type { Candle } from "./ta/types";
 
+// Defaults target Groq's free OpenAI-compatible tier (no credit card required) so the
+// app works out of the box at zero cost. Override via env vars to point at OpenAI,
+// Anthropic through a compatible proxy, OpenRouter, Cerebras, etc.
 const MODEL = process.env.AI_MODEL || "llama-3.3-70b-versatile";
 const AI_BASE_URL = process.env.AI_BASE_URL || "https://api.groq.com/openai/v1";
 
@@ -46,6 +49,30 @@ async function callForecast(
   candles: Candle[],
   horizon: number,
 ): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
+  const attempts = 3;
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await callForecastOnce(symbol, interval, candles, horizon);
+    } catch (error) {
+      lastError = error;
+      // The model occasionally emits malformed JSON — this is intermittent, not
+      // deterministic, so a short retry resolves it most of the time without
+      // bothering the user.
+    }
+  }
+  throw new Error(
+    `Il modello AI non è riuscito a generare una previsione valida dopo ${attempts} tentativi. Riprova tra poco.` +
+      (lastError instanceof Error ? ` (dettaglio: ${lastError.message})` : ""),
+  );
+}
+
+async function callForecastOnce(
+  symbol: string,
+  interval: string,
+  candles: Candle[],
+  horizon: number,
+): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
   const apiKey = process.env.AI_API_KEY;
   if (!apiKey) throw new Error("AI_API_KEY mancante");
   const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: false });
@@ -77,6 +104,8 @@ ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.t
       model,
       output: Output.object({ schema: ForecastSchema }),
       prompt,
+      // Larger horizons produce longer JSON; give enough room so the response
+      // isn't cut off mid-candle (a frequent cause of "invalid JSON" errors).
       maxOutputTokens: 4096,
     });
     return normalize(output, last, stepSec, horizon);
@@ -85,6 +114,10 @@ ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.t
       const parsed = tryParseJson(error.text ?? "");
       if (parsed) return normalize(parsed, last, stepSec, horizon);
     }
+    // Some providers (Groq included) reject malformed JSON server-side before
+    // it ever reaches the SDK's own parser, so it doesn't surface as a
+    // NoObjectGeneratedError. Try to recover the raw generation from whatever
+    // shape the error payload takes before giving up entirely.
     const raw =
       (error as any)?.data?.error?.failed_generation ??
       (error as any)?.responseBody ??
@@ -146,6 +179,8 @@ export const generateForecast = createServerFn({ method: "POST" })
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
   });
 
+// Same as generateForecast, but for candles the user typed in by hand (e.g. reading
+// them off a chart image) instead of fetching from Yahoo. No network call to Yahoo here.
 const ManualCandleSchema = CandleSchema.extend({ volume: z.number().min(0).default(0) });
 const ForecastFromCandlesInput = z.object({
   symbol: z.string().min(1).max(40).transform((s) => s.trim().toUpperCase()),
@@ -244,12 +279,14 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
       if (err > maxErr) maxErr = err;
     }
     const mape = (sumPct / n) * 100;
-    const anchorClose = pred.anchor_time;
+    const anchorClose = pred.anchor_time; // placeholder
+    // Direction: sign of (last predicted close - anchor implied close) vs (actual last close - actual first open)
     const predDir = predicted[n - 1].close - predicted[0].open;
     const actDir = actual[n - 1].close - actual[0].open;
     const direction_correct = Math.sign(predDir) === Math.sign(actDir);
     void anchorClose;
 
+    // Upsert evaluation
     await context.supabase.from("prediction_evaluations").delete().eq("prediction_id", pred.id);
     const { data: ev, error: e2 } = await context.supabase.from("prediction_evaluations").insert({
       prediction_id: pred.id,
@@ -263,7 +300,7 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
 const BacktestInput = z.object({
   symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()),
   interval: z.enum(["1d", "1h", "1wk"]).default("1d"),
-  anchor_time: z.number(),
+  anchor_time: z.number(), // unix seconds
   horizon: z.number().int().min(3).max(60).default(10),
 });
 export const runBacktest = createServerFn({ method: "POST" })
