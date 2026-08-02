@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Brain, Save, Plus, Trash2, ClipboardPaste, ArrowLeft, ImagePlus } from "lucide-react";
+import { Brain, Save, Plus, Trash2, ClipboardPaste, ArrowLeft, ImagePlus, Camera, Wand2, AlertTriangle } from "lucide-react";
 import { summarize, sma, ema, bollinger } from "@/lib/ta/indicators";
 import { detectPatterns } from "@/lib/ta/patterns";
 import type { Candle } from "@/lib/ta/types";
 import { generateForecastFromCandles, savePrediction } from "@/lib/forecast.functions";
+import { extractCandlesFromImage } from "@/lib/vision.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 
 export const Route = createFileRoute("/_authenticated/manual")({
@@ -37,6 +38,15 @@ interface Row {
   volume: string;
 }
 
+interface CalibRow {
+  id: string;
+  position: string; // 1-based, counting from the left
+  open: string;
+  high: string;
+  low: string;
+  close: string;
+}
+
 function toDatetimeLocal(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
@@ -62,6 +72,58 @@ function ManualEntryPage() {
   const [horizon, setHorizon] = useState(10);
   const [showSMA, setShowSMA] = useState(true);
   const [showBB, setShowBB] = useState(false);
+
+  // -- Photo-assisted entry --
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+  const [totalCandlesVisible, setTotalCandlesVisible] = useState("30");
+  const [calibRows, setCalibRows] = useState<CalibRow[]>([
+    { id: crypto.randomUUID(), position: "1", open: "", high: "", low: "", close: "" },
+  ]);
+  const [extractNotes, setExtractNotes] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const extractFn = useServerFn(extractCandlesFromImage);
+
+  function onPhotoSelected(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => setPhotoDataUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function addCalibRow() {
+    setCalibRows((r) => [...r, { id: crypto.randomUUID(), position: String(r.length + 1), open: "", high: "", low: "", close: "" }]);
+  }
+  function removeCalibRow(id: string) {
+    setCalibRows((r) => r.filter((c) => c.id !== id));
+  }
+  function updateCalibRow(id: string, field: keyof CalibRow, value: string) {
+    setCalibRows((r) => r.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
+  }
+
+  const extractMut = useMutation({
+    mutationFn: () => {
+      const total = parseInt(totalCandlesVisible, 10);
+      const calibration = calibRows
+        .map((c) => ({ position: parseInt(c.position, 10), open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close) }))
+        .filter((c) => [c.position, c.open, c.high, c.low, c.close].every((n) => !isNaN(n)));
+      if (!photoDataUrl) throw new Error("Carica prima una foto del grafico");
+      if (!total || total < 2) throw new Error("Indica quante candele sono visibili nel grafico");
+      if (calibration.length === 0) throw new Error("Serve almeno una candela di calibrazione compilata");
+      return extractFn({ data: { imageBase64: photoDataUrl, totalCandles: total, calibration } });
+    },
+    onSuccess: (res) => {
+      const anchor = new Date();
+      const newRows: Row[] = res.candles.map((c, i) => {
+        const d = new Date(anchor.getTime() - (res.candles.length - 1 - i) * interval.seconds * 1000);
+        return { id: crypto.randomUUID(), date: toDatetimeLocal(d), open: String(c.open), high: String(c.high), low: String(c.low), close: String(c.close), volume: "" };
+      });
+      setRows(newRows);
+      setExtractNotes(res.notes || null);
+      setPhotoOpen(false);
+      toast.success(`${newRows.length} candele stimate dalla foto — controllale prima di procedere`);
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Estrazione fallita"),
+  });
 
   const forecastFn = useServerFn(generateForecastFromCandles);
   const saveFn = useServerFn(savePrediction);
@@ -232,6 +294,94 @@ function ManualEntryPage() {
             {INTERVALS.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
           </select>
         </div>
+      </div>
+
+      {/* Photo-assisted entry */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Estrai da una foto (stima, da correggere)</h3>
+          <button onClick={() => setPhotoOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
+            <Camera className="h-3.5 w-3.5" /> {photoOpen ? "Chiudi" : "Carica foto"}
+          </button>
+        </div>
+
+        {photoOpen && (
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Carica una foto del grafico, indica quante candele sono visibili e inserisci i valori OHLC reali di almeno una candela (meglio due, es. la prima e l'ultima) per calibrare la scala dei prezzi. L'AI stima le altre candele — sono numeri approssimati, da rivedere prima di procedere.
+            </p>
+
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && onPhotoSelected(e.target.files[0])}
+              />
+              <button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-4 py-3 text-xs hover:bg-accent w-full justify-center">
+                <ImagePlus className="h-4 w-4" /> {photoDataUrl ? "Cambia foto" : "Scegli o scatta una foto"}
+              </button>
+              {photoDataUrl && (
+                <img src={photoDataUrl} alt="Grafico caricato" className="mt-3 max-h-64 w-full rounded-md border border-border object-contain bg-black/20" />
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground">Quante candele sono visibili nel grafico?</label>
+              <input type="number" min={2} max={150} value={totalCandlesVisible} onChange={(e) => setTotalCandlesVisible(e.target.value)} className="mt-1 w-32 rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-muted-foreground">Candele di calibrazione (valori reali noti)</label>
+                <button onClick={addCalibRow} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"><Plus className="h-3 w-3" /> Aggiungi</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-muted-foreground text-left border-b border-border/60">
+                      <th className="py-1.5 pr-2">Posizione (da sx, 1 = prima)</th>
+                      <th className="py-1.5 pr-2">Open</th>
+                      <th className="py-1.5 pr-2">High</th>
+                      <th className="py-1.5 pr-2">Low</th>
+                      <th className="py-1.5 pr-2">Close</th>
+                      <th className="py-1.5"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calibRows.map((c) => (
+                      <tr key={c.id} className="border-b border-border/30">
+                        <td className="py-1 pr-2"><input type="number" min={1} value={c.position} onChange={(e) => updateCalibRow(c.id, "position", e.target.value)} className="w-24 rounded border border-border bg-background px-1.5 py-1" /></td>
+                        {(["open", "high", "low", "close"] as const).map((f) => (
+                          <td key={f} className="py-1 pr-2"><input type="number" step="any" value={c[f]} onChange={(e) => updateCalibRow(c.id, f, e.target.value)} className="w-20 rounded border border-border bg-background px-1.5 py-1 tabular" /></td>
+                        ))}
+                        <td className="py-1"><button onClick={() => removeCalibRow(c.id)} className="rounded p-1 text-muted-foreground hover:text-destructive hover:bg-destructive/10"><Trash2 className="h-3.5 w-3.5" /></button></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <button
+              onClick={() => extractMut.mutate()}
+              disabled={extractMut.isPending}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              <Wand2 className="h-3.5 w-3.5" /> {extractMut.isPending ? "Analizzo la foto…" : "Stima candele dalla foto"}
+            </button>
+            <p className="text-[11px] text-muted-foreground">Questo sostituirà le righe attuali nella tabella qui sotto con le candele stimate.</p>
+          </div>
+        )}
+
+        {extractNotes && (
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-700 dark:text-yellow-400">
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+            <p><strong>Note dell'AI sulla stima:</strong> {extractNotes}</p>
+          </div>
+        )}
       </div>
 
       {/* Table */}
