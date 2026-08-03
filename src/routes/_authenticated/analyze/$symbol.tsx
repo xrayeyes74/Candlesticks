@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { analyzeSymbol } from "@/lib/market.functions";
 import { generateForecast, savePrediction, addWatchlist } from "@/lib/forecast.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
+import { DirectionalProbability } from "@/components/DirectionalProbability";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { sma, ema, bollinger } from "@/lib/ta/indicators";
@@ -129,6 +130,8 @@ function AnalyzePage() {
           <CandlestickChartView
             candles={data.data.candles}
             predicted={fcMut.data?.candles}
+            optimistic={fcMut.data?.optimistic}
+            pessimistic={fcMut.data?.pessimistic}
             overlays={overlays}
           />
 
@@ -154,9 +157,16 @@ function AnalyzePage() {
               </div>
             </div>
             {fcMut.data ? (
-              <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground">{fcMut.data.rationale}</p>
-                <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 text-sm">
+                  <p className="text-muted-foreground">{fcMut.data.rationale}</p>
+                  <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+                  <p className="text-[11px] text-muted-foreground">La banda tratteggiata sul grafico mostra un range plausibile (±1 deviazione standard storica), non un altro scenario previsto dall'AI.</p>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">Probabilità direzionale a {horizon} candele</p>
+                  <DirectionalProbability probability={fcMut.data.directionalProbability} />
+                </div>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">Clicca "Genera previsione" per far estendere il grafico con {horizon} candele previste dall'AI.</p>

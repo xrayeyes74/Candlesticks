@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listPredictions, evaluatePrediction, deletePrediction } from "@/lib/forecast.functions";
+import { listPredictions, evaluatePrediction, deletePrediction, getPredictionStats } from "@/lib/forecast.functions";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, Clock, Trash2, RefreshCw, ArrowRight } from "lucide-react";
-import { useMemo } from "react";
 
 export const Route = createFileRoute("/_authenticated/predictions")({
   component: PredictionsPage,
@@ -17,25 +16,24 @@ function PredictionsPage() {
   const listP = useServerFn(listPredictions);
   const evalFn = useServerFn(evaluatePrediction);
   const delFn = useServerFn(deletePrediction);
+  const statsFn = useServerFn(getPredictionStats);
   const qc = useQueryClient();
   const preds = useQuery({ queryKey: ["predictions"], queryFn: () => listP() });
+  const stats = useQuery({ queryKey: ["prediction-stats"], queryFn: () => statsFn() });
 
   const evalMut = useMutation({
     mutationFn: (id: string) => evalFn({ data: { prediction_id: id } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["predictions"] }); toast.success("Valutato"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["predictions"] });
+      qc.invalidateQueries({ queryKey: ["prediction-stats"] });
+      toast.success("Valutato");
+    },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Errore valutazione"),
   });
   const delMut = useMutation({
     mutationFn: (id: string) => delFn({ data: { id } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["predictions"] }),
   });
-
-  // Cumulative accuracy from any evaluation cache — since we don't fetch evals separately,
-  // we show per-prediction call to evaluate. Aggregated stats appear after user evaluates.
-  const stats = useMemo(() => {
-    const rows = preds.data ?? [];
-    return { total: rows.length };
-  }, [preds.data]);
 
   return (
     <div className="space-y-6">
@@ -44,8 +42,34 @@ function PredictionsPage() {
         <p className="text-sm text-muted-foreground">Ogni previsione può essere valutata a posteriori confrontando le candele previste con quelle reali successive.</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-        <div className="rounded-lg border border-border bg-card p-3"><div className="text-xs text-muted-foreground">Totale salvate</div><div className="text-xl font-semibold tabular">{stats.total}</div></div>
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Affidabilità storica (basata sui backtest già valutati)</h2>
+        {stats.isLoading ? (
+          <p className="text-sm text-muted-foreground">Caricamento…</p>
+        ) : !stats.data || stats.data.evaluated === 0 ? (
+          <p className="text-sm text-muted-foreground">Ancora nessuna previsione valutata — usa "Valuta" qui sotto o prova qualche backtest per iniziare a costruire uno storico reale, invece di fidarti a scatola chiusa.</p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            <div className="rounded-lg border border-border p-3">
+              <div className="text-xs text-muted-foreground">Previsioni valutate</div>
+              <div className="text-xl font-semibold tabular">{stats.data.evaluated}</div>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <div className="text-xs text-muted-foreground">Direzione indovinata</div>
+              <div className="text-xl font-semibold tabular">
+                {stats.data.directionAccuracy != null ? `${Math.round(stats.data.directionAccuracy * 100)}%` : "—"}
+                <span className="ml-1 text-xs font-normal text-muted-foreground">({stats.data.directionCorrect}/{stats.data.evaluated})</span>
+              </div>
+            </div>
+            <div className="rounded-lg border border-border p-3">
+              <div className="text-xs text-muted-foreground">Errore medio (MAPE)</div>
+              <div className="text-xl font-semibold tabular">{stats.data.avgMape != null ? `${stats.data.avgMape.toFixed(2)}%` : "—"}</div>
+            </div>
+          </div>
+        )}
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Il 50% di direzione indovinata equivale a un lancio di moneta — è il punto di riferimento minimo per capire se l'AI sta facendo qualcosa di utile o no su questo tipo di dati.
+        </p>
       </div>
 
       {preds.isLoading && <div className="text-sm text-muted-foreground">Caricamento…</div>}

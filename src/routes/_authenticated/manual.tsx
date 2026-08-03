@@ -10,6 +10,7 @@ import type { Candle } from "@/lib/ta/types";
 import { generateForecastFromCandles, savePrediction } from "@/lib/forecast.functions";
 import { extractCandlesFromImage } from "@/lib/vision.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
+import { DirectionalProbability } from "@/components/DirectionalProbability";
 
 export const Route = createFileRoute("/_authenticated/manual")({
   component: ManualEntryPage,
@@ -486,7 +487,7 @@ function ManualEntryPage() {
             <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> Bollinger</label>
           </div>
 
-          <CandlestickChartView candles={candles} predicted={fcMut.data?.candles} overlays={overlays} />
+          <CandlestickChartView candles={candles} predicted={fcMut.data?.candles} optimistic={fcMut.data?.optimistic} pessimistic={fcMut.data?.pessimistic} overlays={overlays} />
 
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
@@ -510,9 +511,16 @@ function ManualEntryPage() {
               </div>
             </div>
             {fcMut.data ? (
-              <div className="space-y-2 text-sm">
-                <p className="text-muted-foreground">{fcMut.data.rationale}</p>
-                <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2 text-sm">
+                  <p className="text-muted-foreground">{fcMut.data.rationale}</p>
+                  <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+                  <p className="text-[11px] text-muted-foreground">La banda tratteggiata sul grafico mostra un range plausibile (±1 deviazione standard storica), non un altro scenario previsto dall'AI.</p>
+                </div>
+                <div>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">Probabilità direzionale a {horizon} candele</p>
+                  <DirectionalProbability probability={fcMut.data.directionalProbability} />
+                </div>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground">Clicca "Genera previsione" per far estendere il grafico con {horizon} candele previste dall'AI, calcolate sui dati che hai inserito.</p>

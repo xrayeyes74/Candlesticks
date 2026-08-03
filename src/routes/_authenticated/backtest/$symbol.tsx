@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { runBacktest } from "@/lib/forecast.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
+import { DirectionalProbability } from "@/components/DirectionalProbability";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ArrowLeft, History, Play } from "lucide-react";
@@ -70,17 +71,28 @@ function BacktestPage() {
           <CandlestickChartView
             candles={mut.data.history}
             predicted={mut.data.predicted}
+            optimistic={mut.data.optimistic}
+            pessimistic={mut.data.pessimistic}
             actual={mut.data.actual}
             height={480}
           />
 
-          <div className="rounded-xl border border-border bg-card p-4 text-sm">
-            <div className="mb-2 text-xs text-muted-foreground flex items-center gap-4">
-              <span><span className="inline-block h-2 w-4 bg-[oklch(0.72_0.16_165)] mr-1 align-middle" />Storico reale (candele)</span>
-              <span><span className="inline-block h-2 w-4 bg-[#8b78ff] mr-1 align-middle" />Previsione AI</span>
-              <span><span className="inline-block h-2 w-4 bg-[#f5d90a] mr-1 align-middle" />Chiusura reale post-ancoraggio</span>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-4 text-sm">
+              <div className="mb-2 text-xs text-muted-foreground flex items-center gap-4">
+                <span><span className="inline-block h-2 w-4 bg-[oklch(0.72_0.16_165)] mr-1 align-middle" />Storico reale (candele)</span>
+                <span><span className="inline-block h-2 w-4 bg-[#8b78ff] mr-1 align-middle" />Previsione AI</span>
+                <span><span className="inline-block h-2 w-4 bg-[#f5d90a] mr-1 align-middle" />Chiusura reale post-ancoraggio</span>
+              </div>
+              <p className="text-muted-foreground">{mut.data.rationale}</p>
             </div>
-            <p className="text-muted-foreground">{mut.data.rationale}</p>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Probabilità direzionale stimata dall'AI (prima di conoscere il risultato)</p>
+              <DirectionalProbability probability={mut.data.directionalProbability} />
+              <p className="mt-3 text-xs text-muted-foreground">
+                Esito reale: <span className={mut.data.metrics.direction_correct ? "text-bull font-medium" : "text-bear font-medium"}>{mut.data.metrics.direction_correct ? "direzione indovinata" : "direzione sbagliata"}</span>
+              </p>
+            </div>
           </div>
         </>
       )}

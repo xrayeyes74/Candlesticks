@@ -26,6 +26,11 @@ const ForecastSchema = z.object({
   candles: z.array(CandleSchema),
   rationale: z.string(),
   confidence: z.number(),
+  directionalProbability: z.object({
+    up: z.number().min(0).max(1),
+    down: z.number().min(0).max(1),
+    sideways: z.number().min(0).max(1),
+  }),
 });
 
 function intervalSeconds(interval: string): number {
@@ -43,12 +48,39 @@ function intervalSeconds(interval: string): number {
   }
 }
 
+// Standard deviation of log returns over the recent window — used to build the
+// optimistic/pessimistic band around the AI's central forecast. This is computed
+// statistically from real history, not asked of the model, so it stays reliable
+// even when the model's own JSON generation has an off day.
+function historicalVolatility(candles: Candle[]): number {
+  const window = candles.slice(-60);
+  const returns: number[] = [];
+  for (let i = 1; i < window.length; i++) {
+    if (window[i - 1].close > 0 && window[i].close > 0) {
+      returns.push(Math.log(window[i].close / window[i - 1].close));
+    }
+  }
+  if (returns.length < 5) return 0.02; // fallback ~2% if too little history
+  const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const variance = returns.reduce((a, b) => a + (b - mean) ** 2, 0) / returns.length;
+  return Math.sqrt(variance) || 0.02;
+}
+
+interface ForecastResult {
+  candles: Candle[];
+  rationale: string;
+  confidence: number;
+  directionalProbability: { up: number; down: number; sideways: number };
+  optimistic: { time: number; value: number }[];
+  pessimistic: { time: number; value: number }[];
+}
+
 async function callForecast(
   symbol: string,
   interval: string,
   candles: Candle[],
   horizon: number,
-): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
+): Promise<ForecastResult> {
   const attempts = 3;
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
@@ -72,7 +104,7 @@ async function callForecastOnce(
   interval: string,
   candles: Candle[],
   horizon: number,
-): Promise<{ candles: Candle[]; rationale: string; confidence: number }> {
+): Promise<ForecastResult> {
   const apiKey = process.env.AI_API_KEY;
   if (!apiKey) throw new Error("AI_API_KEY mancante");
   const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: false });
@@ -83,18 +115,24 @@ async function callForecastOnce(
   const patterns = detectPatterns(candles).slice(-8);
   const last = candles[candles.length - 1];
   const stepSec = intervalSeconds(interval);
+  const vol = historicalVolatility(candles);
 
-  const prompt = `Sei un analista tecnico. Dato lo storico OHLC del titolo ${symbol} (intervallo ${interval}) e un riassunto degli indicatori, produci una PREVISIONE di ${horizon} candele future consecutive. Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (nessun testo prima o dopo), con questa forma: {"candles": [{"time": number, "open": number, "high": number, "low": number, "close": number}, ...], "rationale": string, "confidence": number}.
+  const prompt = `Sei un analista tecnico. Dato lo storico OHLC del titolo ${symbol} (intervallo ${interval}) e un riassunto degli indicatori, valuta lo scenario più probabile per le prossime ${horizon} candele.
+
+La cosa più importante che devi stimare è la PROBABILITÀ DIREZIONALE (rialzo / ribasso / laterale) — è il segnale principale, più utile di prezzi esatti che nessuno può prevedere con precisione. Genera comunque un percorso di prezzo come illustrazione dello scenario centrale, ma sappi che il valore reale è nella stima delle probabilità e nel ragionamento.
+
+Rispondi ESCLUSIVAMENTE con un oggetto JSON valido (nessun testo prima o dopo), con questa forma: {"candles": [{"time": number, "open": number, "high": number, "low": number, "close": number}, ...], "rationale": string, "confidence": number, "directionalProbability": {"up": number, "down": number, "sideways": number}}.
 
 Rispetta queste regole:
-- Genera esattamente ${horizon} candele.
+- Genera esattamente ${horizon} candele come illustrazione dello scenario centrale.
 - Ogni "time" deve essere in secondi Unix, incrementato di ${stepSec} rispetto alla precedente, partendo da ${last.time + stepSec}.
 - Ogni candela deve avere low <= min(open, close) e high >= max(open, close).
-- Prezzi coerenti con il livello attuale (${last.close.toFixed(2)}); movimenti realistici (±0.5% ~ ±3% per candela salvo eventi).
+- Prezzi coerenti con il livello attuale (${last.close.toFixed(2)}); movimenti realistici (volatilità storica recente ~${(vol * 100).toFixed(2)}% per candela).
+- "directionalProbability": tre numeri tra 0 e 1 che sommano a 1, la tua stima onesta della probabilità che il prezzo dopo ${horizon} candele sia rispettivamente più alto (up), più basso (down), o sostanzialmente invariato entro ±1 deviazione standard (sideways) rispetto ad oggi. Se l'analisi tecnica è ambigua o debole, NON avere paura di dare probabilità vicine a 1/3 ciascuna — è il risultato onesto, non un fallimento.
 - Considera indicatori: RSI ${indicators.rsi14?.toFixed(1)}, MACD hist ${indicators.macd.hist?.toFixed(3)}, trend EMA9/21 ${indicators.trendSignal}, Bollinger ${indicators.bollingerSignal}, segnale complessivo ${indicators.overallSignal}.
 - Pattern recenti: ${patterns.map((p) => `${p.name}(${p.implication})`).join(", ") || "nessuno rilevante"}.
-- "rationale": 3-5 frasi in italiano che spiegano la previsione basata sull'analisi tecnica.
-- "confidence": numero tra 0 e 1.
+- "rationale": 3-5 frasi in italiano che spiegano il ragionamento dietro le probabilità direzionali, basato sull'analisi tecnica.
+- "confidence": numero tra 0 e 1, quanto sei sicuro della tua analisi (non della direzione dei prezzi in sé).
 
 Ultime 120 candele (time,open,high,low,close):
 ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.toFixed(2)},${c.close.toFixed(2)}`).join("\n")}`;
@@ -108,11 +146,11 @@ ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.t
       // isn't cut off mid-candle (a frequent cause of "invalid JSON" errors).
       maxOutputTokens: 4096,
     });
-    return normalize(output, last, stepSec, horizon);
+    return normalize(output, last, stepSec, horizon, vol);
   } catch (error) {
     if (NoObjectGeneratedError.isInstance(error)) {
       const parsed = tryParseJson(error.text ?? "");
-      if (parsed) return normalize(parsed, last, stepSec, horizon);
+      if (parsed) return normalize(parsed, last, stepSec, horizon, vol);
     }
     // Some providers (Groq included) reject malformed JSON server-side before
     // it ever reaches the SDK's own parser, so it doesn't surface as a
@@ -125,7 +163,7 @@ ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.t
       (error as any)?.text;
     if (typeof raw === "string") {
       const parsed = tryParseJson(raw);
-      if (parsed) return normalize(parsed, last, stepSec, horizon);
+      if (parsed) return normalize(parsed, last, stepSec, horizon, vol);
     }
     throw error;
   }
@@ -144,7 +182,8 @@ function normalize(
   last: Candle,
   stepSec: number,
   horizon: number,
-) {
+  vol: number,
+): ForecastResult {
   const clipped = raw.candles.slice(0, horizon);
   const priceRef = last.close;
   const outCandles: Candle[] = clipped.map((c, i) => {
@@ -157,7 +196,33 @@ function normalize(
     return { time, open: o, high: hi, low: lo, close: cl, volume: 0 };
   });
   const confidence = Math.max(0, Math.min(1, raw.confidence ?? 0.5));
-  return { candles: outCandles, rationale: (raw.rationale ?? "").slice(0, 1200), confidence };
+
+  // Confidence band: ±1 std-dev of historical returns, widening with sqrt(horizon)
+  // as in a random-walk model — computed statistically, not by the AI, so it stays
+  // reliable regardless of how the model's own JSON generation behaves that day.
+  const optimistic = outCandles.map((c, i) => ({
+    time: c.time,
+    value: c.close * (1 + vol * Math.sqrt(i + 1)),
+  }));
+  const pessimistic = outCandles.map((c, i) => ({
+    time: c.time,
+    value: Math.max(0.01, c.close * (1 - vol * Math.sqrt(i + 1))),
+  }));
+
+  const dp = raw.directionalProbability ?? { up: 1 / 3, down: 1 / 3, sideways: 1 / 3 };
+  const dpSum = dp.up + dp.down + dp.sideways;
+  const directionalProbability = dpSum > 0
+    ? { up: dp.up / dpSum, down: dp.down / dpSum, sideways: dp.sideways / dpSum }
+    : { up: 1 / 3, down: 1 / 3, sideways: 1 / 3 };
+
+  return {
+    candles: outCandles,
+    rationale: (raw.rationale ?? "").slice(0, 1200),
+    confidence,
+    directionalProbability,
+    optimistic,
+    pessimistic,
+  };
 }
 
 // ---- Server functions ----
@@ -243,6 +308,41 @@ export const listPredictions = createServerFn({ method: "GET" })
       .limit(50);
     if (error) throw new Error(error.message);
     return data ?? [];
+  });
+
+// Historical reliability: aggregates real evaluated outcomes (predictions that have
+// already been checked against what actually happened) so the person can see the
+// AI's actual track record instead of trusting each new forecast on faith.
+export const getPredictionStats = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: preds, error: e1 } = await context.supabase
+      .from("predictions")
+      .select("id")
+      .limit(2000);
+    if (e1) throw new Error(e1.message);
+    const ids = (preds ?? []).map((p) => p.id);
+    if (ids.length === 0) {
+      return { evaluated: 0, directionCorrect: 0, directionAccuracy: null, avgMape: null };
+    }
+    const { data: evals, error: e2 } = await context.supabase
+      .from("prediction_evaluations")
+      .select("direction_correct, mape")
+      .in("prediction_id", ids);
+    if (e2) throw new Error(e2.message);
+    const rows = (evals ?? []).filter((e) => e.direction_correct !== null);
+    if (rows.length === 0) {
+      return { evaluated: 0, directionCorrect: 0, directionAccuracy: null, avgMape: null };
+    }
+    const correct = rows.filter((r) => r.direction_correct).length;
+    const mapeValues = rows.map((r) => r.mape).filter((m): m is number => m != null);
+    const avgMape = mapeValues.length > 0 ? mapeValues.reduce((a, b) => a + b, 0) / mapeValues.length : null;
+    return {
+      evaluated: rows.length,
+      directionCorrect: correct,
+      directionAccuracy: correct / rows.length,
+      avgMape,
+    };
   });
 
 const DeletePredictionInput = z.object({ id: z.string().uuid() });
@@ -333,6 +433,9 @@ export const runBacktest = createServerFn({ method: "POST" })
       anchor: before[before.length - 1],
       history: before.slice(-200),
       predicted: forecast.candles,
+      optimistic: forecast.optimistic,
+      pessimistic: forecast.pessimistic,
+      directionalProbability: forecast.directionalProbability,
       actual: after,
       rationale: forecast.rationale,
       confidence: forecast.confidence,
