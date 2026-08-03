@@ -127,7 +127,7 @@ Rispetta queste regole:
 - Genera esattamente ${horizon} candele come illustrazione dello scenario centrale.
 - Ogni "time" deve essere in secondi Unix, incrementato di ${stepSec} rispetto alla precedente, partendo da ${last.time + stepSec}.
 - Ogni candela deve avere low <= min(open, close) e high >= max(open, close).
-- Prezzi coerenti con il livello attuale (${last.close.toFixed(2)}); movimenti realistici (volatilità storica recente ~${(vol * 100).toFixed(2)}% per candela).
+- Prezzi coerenti con il livello attuale (${last.close.toFixed(2)}); movimenti realistici e PRUDENTI (volatilità storica recente ~${(vol * 100).toFixed(2)}% per candela) — evita movimenti aggressivi o a senso unico su tutte le ${horizon} candele: i prezzi reali oscillano, raramente proseguono in linea retta.
 - "directionalProbability": tre numeri tra 0 e 1 che sommano a 1, la tua stima onesta della probabilità che il prezzo dopo ${horizon} candele sia rispettivamente più alto (up), più basso (down), o sostanzialmente invariato entro ±1 deviazione standard (sideways) rispetto ad oggi. Se l'analisi tecnica è ambigua o debole, NON avere paura di dare probabilità vicine a 1/3 ciascuna — è il risultato onesto, non un fallimento.
 - Considera indicatori: RSI ${indicators.rsi14?.toFixed(1)}, MACD hist ${indicators.macd.hist?.toFixed(3)}, trend EMA9/21 ${indicators.trendSignal}, Bollinger ${indicators.bollingerSignal}, segnale complessivo ${indicators.overallSignal}.
 - Pattern recenti: ${patterns.map((p) => `${p.name}(${p.implication})`).join(", ") || "nessuno rilevante"}.
@@ -186,9 +186,18 @@ function normalize(
 ): ForecastResult {
   const clipped = raw.candles.slice(0, horizon);
   const priceRef = last.close;
+  // Dampen exaggerated moves: cap each candle's distance from today's price to at
+  // most 2x the statistical 1-std-dev band (same volatility used for the confidence
+  // band), growing with sqrt(horizon). This is enforced in code, not just asked of
+  // the model in the prompt, because the model doesn't always respect "be realistic"
+  // instructions — this makes it mathematically impossible regardless.
+  const capMultiplier = 2;
   const outCandles: Candle[] = clipped.map((c, i) => {
     const time = last.time + stepSec * (i + 1);
-    const clamp = (v: number) => Math.max(priceRef * 0.5, Math.min(priceRef * 1.8, v));
+    const maxDelta = vol * Math.sqrt(i + 1) * capMultiplier;
+    const upperBound = priceRef * (1 + maxDelta);
+    const lowerBound = Math.max(priceRef * 0.05, priceRef * (1 - maxDelta));
+    const clamp = (v: number) => Math.max(lowerBound, Math.min(upperBound, v));
     const o = clamp(c.open), cl = clamp(c.close);
     let hi = clamp(c.high), lo = clamp(c.low);
     hi = Math.max(hi, o, cl);
@@ -229,7 +238,7 @@ function normalize(
 
 const ForecastInput = z.object({
   symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()),
-  interval: z.enum(["1d", "1h", "1wk"]).default("1d"),
+  interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
   range: z.string().default("1y"),
   horizon: z.number().int().min(3).max(90).default(10),
 });
@@ -399,7 +408,7 @@ export const evaluatePrediction = createServerFn({ method: "POST" })
 // Backtest: pick historical anchor, forecast as-of that date, compare to real
 const BacktestInput = z.object({
   symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()),
-  interval: z.enum(["1d", "1h", "1wk"]).default("1d"),
+  interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
   anchor_time: z.number(), // unix seconds
   horizon: z.number().int().min(3).max(60).default(10),
 });

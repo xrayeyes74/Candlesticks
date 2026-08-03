@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/backtest/$symbol")({
 function BacktestPage() {
   const { symbol } = Route.useParams();
   const bt = useServerFn(runBacktest);
-  const [interval, setInterval] = useState<"1d" | "1h" | "1wk">("1d");
+  const [interval, setInterval] = useState<"1m" | "5m" | "15m" | "30m" | "1h" | "4h" | "1d" | "1wk" | "1mo">("1d");
   const defaultDate = new Date(); defaultDate.setMonth(defaultDate.getMonth() - 6);
   const [date, setDate] = useState<string>(defaultDate.toISOString().slice(0, 10));
   const [horizon, setHorizon] = useState(10);
@@ -44,9 +44,15 @@ function BacktestPage() {
         <div>
           <label className="text-xs text-muted-foreground">Intervallo</label>
           <select value={interval} onChange={(e) => setInterval(e.target.value as any)} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-            <option value="1d">Daily</option>
-            <option value="1wk">Weekly</option>
+            <option value="1m">1 minuto</option>
+            <option value="5m">5 minuti</option>
+            <option value="15m">15 minuti</option>
+            <option value="30m">30 minuti</option>
             <option value="1h">1 ora</option>
+            <option value="4h">4 ore</option>
+            <option value="1d">1 giorno</option>
+            <option value="1wk">1 settimana</option>
+            <option value="1mo">1 mese</option>
           </select>
         </div>
         <div>

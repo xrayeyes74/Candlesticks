@@ -15,12 +15,28 @@ export const Route = createFileRoute("/_authenticated/analyze/$symbol")({
   head: ({ params }) => ({ meta: [{ title: `${params.symbol} — Analisi tecnica` }] }),
 });
 
-const INTERVALS = [
-  { i: "1d", r: "6mo", label: "6M · Daily" },
-  { i: "1d", r: "1y", label: "1Y · Daily" },
-  { i: "1d", r: "5y", label: "5Y · Daily" },
-  { i: "1h", r: "1mo", label: "1M · 1h" },
-  { i: "1wk", r: "5y", label: "5Y · Weekly" },
+const INTERVAL_OPTIONS = [
+  { value: "1m", label: "1 minuto" },
+  { value: "5m", label: "5 minuti" },
+  { value: "15m", label: "15 minuti" },
+  { value: "30m", label: "30 minuti" },
+  { value: "1h", label: "1 ora" },
+  { value: "4h", label: "4 ore" },
+  { value: "1d", label: "1 giorno" },
+  { value: "1wk", label: "1 settimana" },
+  { value: "1mo", label: "1 mese" },
+] as const;
+
+const RANGE_OPTIONS = [
+  { value: "5d", label: "5 giorni" },
+  { value: "1mo", label: "1 mese" },
+  { value: "3mo", label: "3 mesi" },
+  { value: "6mo", label: "6 mesi" },
+  { value: "1y", label: "1 anno" },
+  { value: "2y", label: "2 anni" },
+  { value: "5y", label: "5 anni" },
+  { value: "10y", label: "10 anni" },
+  { value: "max", label: "Massimo disponibile" },
 ] as const;
 
 function fmt(n: number | null | undefined, d = 2) { return n == null || !isFinite(n) ? "—" : n.toFixed(d); }
@@ -30,7 +46,8 @@ function signalBg(s: string) { return s === "buy" ? "bg-bull/15 text-bull border
 
 function AnalyzePage() {
   const { symbol } = Route.useParams();
-  const [tf, setTf] = useState<(typeof INTERVALS)[number]>(INTERVALS[1]);
+  const [interval, setInterval] = useState<(typeof INTERVAL_OPTIONS)[number]["value"]>("1d");
+  const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]["value"]>("1y");
   const [horizon, setHorizon] = useState(10);
   const [showSMA, setShowSMA] = useState(true);
   const [showBB, setShowBB] = useState(false);
@@ -42,12 +59,12 @@ function AnalyzePage() {
   const qc = useQueryClient();
 
   const data = useQuery({
-    queryKey: ["analysis", symbol, tf.i, tf.r],
-    queryFn: () => analyze({ data: { symbol, interval: tf.i as any, range: tf.r as any } }),
+    queryKey: ["analysis", symbol, interval, range],
+    queryFn: () => analyze({ data: { symbol, interval: interval as any, range: range as any } }),
   });
 
   const fcMut = useMutation({
-    mutationFn: () => forecast({ data: { symbol, interval: tf.i as any, range: tf.r as any, horizon } }),
+    mutationFn: () => forecast({ data: { symbol, interval: interval as any, range: range as any, horizon } }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "Previsione fallita"),
   });
 
@@ -56,7 +73,7 @@ function AnalyzePage() {
       if (!fcMut.data || !data.data) throw new Error("Genera prima una previsione");
       return save({
         data: {
-          symbol, interval: tf.i,
+          symbol, interval,
           anchor_time: fcMut.data.anchor.time,
           horizon_candles: horizon,
           predicted_candles: fcMut.data.candles,
@@ -113,11 +130,20 @@ function AnalyzePage() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {INTERVALS.map((it) => (
-          <button key={it.label} onClick={() => setTf(it)} className={`rounded-md px-3 py-1.5 text-xs ${tf.label === it.label ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>{it.label}</button>
-        ))}
-        <div className="ml-auto flex gap-2 items-center text-xs">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label className="text-xs text-muted-foreground">Durata candela</label>
+          <select value={interval} onChange={(e) => setInterval(e.target.value as any)} className="mt-1 block rounded-md border border-input bg-background px-3 py-2 text-sm">
+            {INTERVAL_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground">Periodo storico</label>
+          <select value={range} onChange={(e) => setRange(e.target.value as any)} className="mt-1 block rounded-md border border-input bg-background px-3 py-2 text-sm">
+            {RANGE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="ml-auto flex gap-2 items-center text-xs pb-2">
           <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showSMA} onChange={(e) => setShowSMA(e.target.checked)} /> SMA/EMA</label>
           <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> Bollinger</label>
         </div>

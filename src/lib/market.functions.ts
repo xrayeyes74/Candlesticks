@@ -5,7 +5,7 @@ import { summarize } from "./ta/indicators";
 import { detectPatterns } from "./ta/patterns";
 import { fetchHistory, searchSymbols as tdSearch } from "./market-data.server";
 
-const IntervalSchema = z.enum(["1d", "1h", "1wk"]);
+const IntervalSchema = z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]);
 const RangeSchema = z.enum(["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"]);
 
 const FetchInput = z.object({
