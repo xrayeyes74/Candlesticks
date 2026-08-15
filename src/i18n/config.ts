@@ -10,8 +10,6 @@ export const SUPPORTED_LANGUAGES = [
   { code: "en", label: "English" },
   { code: "fr", label: "Français" },
   { code: "es", label: "Español" },
-  // { code: "zh", label: "中文" },  // planned
-  // { code: "ar", label: "العربية" }, // planned — needs RTL layout support
 ] as const;
 
 const STORAGE_KEY = "candlestick-lang";
