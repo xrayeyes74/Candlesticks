@@ -1,12 +1,15 @@
+import { useTranslation } from "react-i18next";
+
 interface Props {
   probability: { up: number; down: number; sideways: number };
 }
 
 export function DirectionalProbability({ probability }: Props) {
+  const { t } = useTranslation();
   const items = [
-    { label: "Rialzo", value: probability.up, color: "bg-bull" },
-    { label: "Ribasso", value: probability.down, color: "bg-bear" },
-    { label: "Laterale", value: probability.sideways, color: "bg-neutral" },
+    { label: t("directional.up"), value: probability.up, color: "bg-bull" },
+    { label: t("directional.down"), value: probability.down, color: "bg-bear" },
+    { label: t("directional.sideways"), value: probability.sideways, color: "bg-neutral" },
   ];
   return (
     <div className="space-y-1.5">

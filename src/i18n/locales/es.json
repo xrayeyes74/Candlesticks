@@ -1,0 +1,283 @@
+{
+  "common": {
+    "appName": "Candlestick AI",
+    "loading": "Cargando…",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "back": "Atrás",
+    "analyze": "Analizar",
+    "goTo": "Ir",
+    "logout": "Cerrar sesión",
+    "disclaimer": "Los análisis y las previsiones no constituyen asesoramiento financiero.",
+    "error": "Error",
+    "confirm": "Confirmar",
+    "notFoundTitle": "Página no encontrada",
+    "notFoundDesc": "La página que buscabas no existe.",
+    "backHome": "Volver al inicio",
+    "somethingWrong": "Algo salió mal",
+    "retry": "Reintentar"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "manual": "Entrada manual",
+    "predictions": "Predicciones"
+  },
+  "landing": {
+    "cta": "Entrar",
+    "badge": "Análisis técnico · Patrones · Predicción IA · Backtest",
+    "titleLine1": "Lee el gráfico.",
+    "titleLine2": "Predice el movimiento.",
+    "subtitle": "Gráficos de velas, indicadores clásicos, reconocimiento de patrones de velas y una IA que extiende visualmente el gráfico con su predicción. Luego compárala con lo que realmente ocurrió.",
+    "start": "Empieza gratis",
+    "howItWorks": "Cómo funciona",
+    "feature1Title": "Indicadores técnicos",
+    "feature1Desc": "RSI, MACD, medias móviles, Bollinger, estocástico — con señales automáticas de compra/venta/mantener.",
+    "feature2Title": "Patrones de velas",
+    "feature2Desc": "Doji, martillo, envolvente, estrella de la mañana/tarde, tres soldados blancos y más, detectados en las últimas velas.",
+    "feature3Title": "Predicción IA visual",
+    "feature3Desc": "Un modelo de IA extiende tu gráfico con N velas previstas superpuestas a los datos reales.",
+    "feature4Title": "Backtest histórico",
+    "feature4Desc": "Elige una fecha pasada, genera la predicción de aquel día y compárala con lo que realmente sucedió.",
+    "feature5Title": "Watchlist personal",
+    "feature5Desc": "Guarda tus valores y abre el análisis con un clic.",
+    "feature6Title": "Precisión acumulada",
+    "feature6Desc": "Cada predicción guardada se evalúa a posteriori: MAPE, dirección correcta, error máximo.",
+    "footer": "Herramienta educativa. No es asesoramiento financiero. Fuente de datos: Twelve Data."
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "continueWithGoogle": "Continuar con Google",
+    "or": "o",
+    "email": "Email",
+    "password": "Contraseña",
+    "passwordHint": "mín. 8 caracteres",
+    "createAccount": "Crear cuenta",
+    "accountCreated": "¡Cuenta creada! Ya estás dentro.",
+    "authError": "Error de autenticación",
+    "googleFailed": "Error al iniciar sesión con Google",
+    "footer": "Ningún asesoramiento financiero. Solo herramientas educativas."
+  },
+  "dashboard": {
+    "greeting": "Hola 👋",
+    "subtitle": "Busca un valor, ábrelo y pide una predicción a la IA.",
+    "searchLabel": "Buscar valor (símbolo o nombre)",
+    "searchPlaceholder": "AAPL, Tesla, ENI.MI ...",
+    "searching": "Buscando...",
+    "noResults": "Sin resultados",
+    "watchlistTitle": "Tu watchlist",
+    "watchlistEmpty": "Aún vacía. Busca un valor arriba y guárdalo.",
+    "openAnalysis": "Abrir análisis",
+    "latestPredictions": "Últimas predicciones",
+    "seeAll": "Ver todas",
+    "noPredictions": "Todavía no hay predicciones guardadas.",
+    "candles": "velas",
+    "addedToWatchlist": "Añadido a la watchlist"
+  },
+  "analyze": {
+    "candleDuration": "Duración de la vela",
+    "historicalPeriod": "Periodo histórico",
+    "insufficientData": "Historial demasiado corto para el análisis.",
+    "indicators": "Indicadores",
+    "overallSignal": "Señal general",
+    "trend": "Tendencia EMA9/21",
+    "bollinger": "Bollinger",
+    "stochastic": "Estocástico %K",
+    "patternsDetected": "Patrones de velas detectados",
+    "noPatterns": "Sin patrones relevantes en las velas recientes.",
+    "aiForecast": "Predicción IA",
+    "horizon": "Horizonte:",
+    "generateForecast": "Generar predicción",
+    "generating": "Generando…",
+    "forecastHint": "Haz clic en \"Generar predicción\" para extender el gráfico con {{horizon}} velas previstas por la IA.",
+    "confidence": "Confianza de la IA:",
+    "bandHint": "La banda discontinua del gráfico muestra un rango plausible (±1 desviación estándar histórica), no otro escenario previsto por la IA.",
+    "directionalProbability": "Probabilidad direccional a {{horizon}} velas",
+    "forecastFailed": "La predicción falló",
+    "predictionSaved": "Predicción guardada",
+    "backtest": "Backtest"
+  },
+  "directional": {
+    "up": "Alza",
+    "down": "Baja",
+    "sideways": "Lateral"
+  },
+  "manual": {
+    "title": "Entrada manual",
+    "subtitle": "Mira el gráfico que te interesa (captura de pantalla, TradingView, etc.) y escribe aquí los valores OHLC de las velas. La IA no estima ningún dato: los números son exactamente los que introduces tú.",
+    "symbolLabel": "Símbolo / nombre (libre, no tiene que existir en Yahoo)",
+    "symbolPlaceholder": "ej. BTC/USD, mi valor, etc.",
+    "candleDuration": "Duración de cada vela",
+    "candlesCount": "Velas ({{valid}} válidas de {{total}})",
+    "pasteMultiple": "Pegar varias filas",
+    "addCandle": "Añadir vela",
+    "pasteHint": "Una vela por línea, valores separados por coma o tabulación:",
+    "addRows": "Añadir filas",
+    "rowsAdded": "{{count}} velas añadidas",
+    "colDate": "Fecha/hora",
+    "colOpen": "Apert.",
+    "colHigh": "Máx.",
+    "colLow": "Mín.",
+    "colClose": "Cierre",
+    "colVolume": "Volumen",
+    "needMoreCandles": "Se necesitan al menos 15 velas válidas para generar una predicción IA (tienes {{count}}). Aun así puedes ver indicadores y patrones con las que ya has introducido.",
+    "photoSectionTitle": "Extraer de una foto (estimación, a corregir)",
+    "loadPhoto": "Cargar foto",
+    "close": "Cerrar",
+    "photoHint": "Sube una foto del gráfico, indica cuántas velas son visibles e introduce los valores OHLC reales de al menos una vela (idealmente dos, ej. la primera y la última) para calibrar la escala de precios. La IA estima las demás velas — son números aproximados, revísalos antes de continuar.",
+    "changePhoto": "Cambiar foto",
+    "choosePhoto": "Elegir o tomar una foto",
+    "visibleCandlesQuestion": "¿Cuántas velas son visibles en el gráfico?",
+    "calibrationCandles": "Velas de calibración (valores reales conocidos)",
+    "add": "Añadir",
+    "colPosition": "Posición (desde la izq., 1 = primera)",
+    "extractButton": "Estimar velas desde la foto",
+    "extracting": "Analizando la foto…",
+    "extractReplaceHint": "Esto reemplazará las filas actuales de la tabla de abajo con las velas estimadas.",
+    "extractSuccess": "{{count}} velas estimadas a partir de la foto — revísalas antes de continuar",
+    "extractNotesTitle": "Notas de la IA sobre la estimación:",
+    "extractFailed": "La extracción falló",
+    "extractMissingPhoto": "Sube primero una foto del gráfico",
+    "extractMissingTotal": "Indica cuántas velas son visibles en el gráfico",
+    "extractMissingCalibration": "Se necesita al menos una vela de calibración rellenada",
+    "smaEma": "SMA/EMA",
+    "aiForecastTitle": "Predicción IA",
+    "aiForecastGeneric": "Haz clic en \"Generar predicción\" para extender el gráfico con {{horizon}} velas previstas por la IA, calculadas con los datos que introdujiste.",
+    "genPredictionFirst": "Genera primero una predicción",
+    "indicatorsTitle": "Indicadores",
+    "indicatorsHint": "Los indicadores que necesitan más historial del introducido (ej. SMA200 con pocas velas) muestran \"—\".",
+    "patternsTitle": "Patrones de velas detectados",
+    "noPatterns": "Sin patrones relevantes en las velas introducidas.",
+    "rowError": "Fila {{n}}: {{reason}}",
+    "rowErrorMissing": "valores faltantes o no numéricos",
+    "rowErrorInconsistent": "high/low incoherentes con open/close",
+    "pasteHintSuffix": "(volumen opcional). Las fechas se generan automáticamente en secuencia según la duración elegida arriba."
+  },
+  "backtest": {
+    "title": "Backtest",
+    "subtitle": "Elige una fecha histórica, genera la predicción como si fuera ese día y compárala con lo que realmente sucedió.",
+    "date": "Fecha",
+    "candleDuration": "Duración de la vela",
+    "horizon": "Horizonte (velas)",
+    "run": "Ejecutar backtest",
+    "running": "Ejecutando…",
+    "needMoreHistory": "Se necesita más historial antes de la fecha elegida",
+    "needMoreFuture": "Historial posterior insuficiente para la evaluación",
+    "legendHistory": "Historial real (velas)",
+    "legendPrediction": "Predicción IA",
+    "legendActual": "Cierre real después del ancla",
+    "probabilityBeforeOutcome": "Probabilidad direccional estimada por la IA (antes de conocer el resultado)",
+    "realOutcome": "Resultado real:",
+    "directionCorrect": "dirección acertada",
+    "directionWrong": "dirección equivocada",
+    "mape": "Error medio (MAPE)",
+    "maxError": "Error máximo",
+    "backToAnalysis": "Volver al análisis",
+    "pageSubtitle": "Elige una fecha pasada. La IA generará la predicción usando solo los datos hasta esa fecha, y la compararemos con lo que realmente sucedió después.",
+    "anchorDate": "Fecha de anclaje",
+    "mapeHint": "Error % medio en los cierres",
+    "correct": "Correcta",
+    "wrong": "Incorrecta"
+  },
+  "predictions": {
+    "title": "Predicciones guardadas",
+    "subtitle": "Cada predicción puede evaluarse a posteriori comparando las velas previstas con las velas reales que siguieron.",
+    "statsTitle": "Fiabilidad histórica (basada en los backtests evaluados)",
+    "statsEmpty": "Todavía no hay predicciones evaluadas — usa \"Evaluar\" abajo o prueba un backtest para empezar a construir un historial real, en lugar de confiar a ciegas.",
+    "evaluated": "Predicciones evaluadas",
+    "directionAccuracy": "Dirección acertada",
+    "avgMape": "Error medio (MAPE)",
+    "coinFlipHint": "Un 50% de acierto direccional equivale a lanzar una moneda — es la referencia mínima para saber si la IA aporta algo útil con este tipo de datos.",
+    "empty": "No hay predicciones guardadas. Ve a un valor y haz clic en \"Guardar\".",
+    "evaluate": "Evaluar",
+    "evaluated_toast": "Evaluado",
+    "evaluationError": "Error de evaluación",
+    "pendingHistory": "Historial posterior aún no disponible.",
+    "direction": "Dirección"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "units": {
+    "1m": "1 minuto",
+    "5m": "5 minutos",
+    "15m": "15 minutos",
+    "30m": "30 minutos",
+    "1h": "1 hora",
+    "4h": "4 horas",
+    "1d": "1 día",
+    "1wk": "1 semana",
+    "1mo": "1 mes",
+    "5d": "5 días",
+    "3mo": "3 meses",
+    "6mo": "6 meses",
+    "1y": "1 año",
+    "2y": "2 años",
+    "5y": "5 años",
+    "10y": "10 años",
+    "max": "Máximo disponible"
+  },
+  "patterns": {
+    "doji": {
+      "name": "Doji",
+      "description": "Indecisión: apertura ≈ cierre."
+    },
+    "hammer": {
+      "name": "Martillo",
+      "description": "Sombra inferior larga tras una bajada: posible reversión alcista."
+    },
+    "hanging_man": {
+      "name": "Hombre colgado",
+      "description": "Cuerpo pequeño arriba tras una subida: posible reversión bajista."
+    },
+    "shooting_star": {
+      "name": "Estrella fugaz",
+      "description": "Rechazo en máximos tras una subida: posible reversión bajista."
+    },
+    "inverted_hammer": {
+      "name": "Martillo invertido",
+      "description": "Posible reversión alcista, a confirmar con la siguiente vela."
+    },
+    "marubozu_white": {
+      "name": "Marubozu blanco",
+      "description": "Cuerpo completo sin sombras: fuerte presión direccional."
+    },
+    "marubozu_black": {
+      "name": "Marubozu negro",
+      "description": "Cuerpo completo sin sombras: fuerte presión direccional."
+    },
+    "bullish_engulfing": {
+      "name": "Envolvente alcista",
+      "description": "La vela verde envuelve a la roja anterior."
+    },
+    "bearish_engulfing": {
+      "name": "Envolvente bajista",
+      "description": "La vela roja envuelve a la verde anterior."
+    },
+    "bearish_harami": {
+      "name": "Harami bajista",
+      "description": "Cuerpo bajista pequeño dentro del cuerpo alcista anterior."
+    },
+    "bullish_harami": {
+      "name": "Harami alcista",
+      "description": "Cuerpo alcista pequeño dentro del cuerpo bajista anterior."
+    },
+    "morning_star": {
+      "name": "Estrella de la mañana",
+      "description": "Formación de reversión alcista de tres velas."
+    },
+    "evening_star": {
+      "name": "Estrella de la tarde",
+      "description": "Formación de reversión bajista de tres velas."
+    },
+    "three_white_soldiers": {
+      "name": "Tres soldados blancos",
+      "description": "Tres velas verdes consecutivas con cierres crecientes."
+    },
+    "three_black_crows": {
+      "name": "Tres cuervos negros",
+      "description": "Tres velas rojas consecutivas con cierres decrecientes."
+    }
+  }
+}

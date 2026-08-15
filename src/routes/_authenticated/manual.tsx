@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Brain, Save, Plus, Trash2, ClipboardPaste, ArrowLeft, ImagePlus, Camera, Wand2, AlertTriangle } from "lucide-react";
 import { summarize, sma, ema, bollinger } from "@/lib/ta/indicators";
 import { detectPatterns } from "@/lib/ta/patterns";
@@ -18,15 +19,15 @@ export const Route = createFileRoute("/_authenticated/manual")({
 });
 
 const INTERVALS = [
-  { value: "1m", label: "1 minuto", seconds: 60 },
-  { value: "5m", label: "5 minuti", seconds: 5 * 60 },
-  { value: "15m", label: "15 minuti", seconds: 15 * 60 },
-  { value: "30m", label: "30 minuti", seconds: 30 * 60 },
-  { value: "1h", label: "1 ora", seconds: 3600 },
-  { value: "4h", label: "4 ore", seconds: 4 * 3600 },
-  { value: "1d", label: "1 giorno", seconds: 86400 },
-  { value: "1wk", label: "1 settimana", seconds: 7 * 86400 },
-  { value: "1mo", label: "1 mese", seconds: 30 * 86400 },
+  { value: "1m", seconds: 60 },
+  { value: "5m", seconds: 5 * 60 },
+  { value: "15m", seconds: 15 * 60 },
+  { value: "30m", seconds: 30 * 60 },
+  { value: "1h", seconds: 3600 },
+  { value: "4h", seconds: 4 * 3600 },
+  { value: "1d", seconds: 86400 },
+  { value: "1wk", seconds: 7 * 86400 },
+  { value: "1mo", seconds: 30 * 86400 },
 ] as const;
 
 interface Row {
@@ -62,6 +63,7 @@ function signalColor(s: string) { return s === "buy" ? "text-bull" : s === "sell
 function signalBg(s: string) { return s === "buy" ? "bg-bull/15 text-bull border-bull/30" : s === "sell" ? "bg-bear/15 text-bear border-bear/30" : "bg-muted text-muted-foreground border-border"; }
 
 function ManualEntryPage() {
+  const { t, i18n } = useTranslation();
   const [symbol, setSymbol] = useState("");
   const [interval, setIntervalValue] = useState<(typeof INTERVALS)[number]>(INTERVALS[6]);
   const [rows, setRows] = useState<Row[]>(() => [
@@ -123,9 +125,9 @@ function ManualEntryPage() {
       const calibration = calibRows
         .map((c) => ({ position: parseInt(c.position, 10), open: parseFloat(c.open), high: parseFloat(c.high), low: parseFloat(c.low), close: parseFloat(c.close) }))
         .filter((c) => [c.position, c.open, c.high, c.low, c.close].every((n) => !isNaN(n)));
-      if (!photoDataUrl) throw new Error("Carica prima una foto del grafico");
-      if (!total || total < 2) throw new Error("Indica quante candele sono visibili nel grafico");
-      if (calibration.length === 0) throw new Error("Serve almeno una candela di calibrazione compilata");
+      if (!photoDataUrl) throw new Error(t("manual.extractMissingPhoto"));
+      if (!total || total < 2) throw new Error(t("manual.extractMissingTotal"));
+      if (calibration.length === 0) throw new Error(t("manual.extractMissingCalibration"));
       return extractFn({ data: { imageBase64: photoDataUrl, totalCandles: total, calibration } });
     },
     onSuccess: (res) => {
@@ -137,9 +139,9 @@ function ManualEntryPage() {
       setRows(newRows);
       setExtractNotes(res.notes || null);
       setPhotoOpen(false);
-      toast.success(`${newRows.length} candele stimate dalla foto — controllale prima di procedere`);
+      toast.success(t("manual.extractSuccess", { count: newRows.length }));
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Estrazione fallita"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("manual.extractFailed")),
   });
 
   const forecastFn = useServerFn(generateForecastFromCandles);
@@ -181,7 +183,7 @@ function ManualEntryPage() {
     setRows((r) => [...r, ...newRows]);
     setPasteText("");
     setPasteOpen(false);
-    toast.success(`${newRows.length} candele aggiunte`);
+    toast.success(t("manual.rowsAdded", { count: newRows.length }));
   }
 
   // Parse + validate rows into Candle[]
@@ -193,20 +195,20 @@ function ManualEntryPage() {
       if (!row.open && !row.high && !row.low && !row.close) continue; // skip fully empty rows silently
       const o = parseFloat(row.open), h = parseFloat(row.high), l = parseFloat(row.low), c = parseFloat(row.close);
       const v = row.volume ? parseFloat(row.volume) : 0;
-      const t = Math.floor(new Date(row.date).getTime() / 1000);
-      if ([o, h, l, c].some((n) => isNaN(n)) || isNaN(t)) {
-        errs.push(`Riga ${i + 1}: valori mancanti o non numerici`);
+      const time = Math.floor(new Date(row.date).getTime() / 1000);
+      if ([o, h, l, c].some((n) => isNaN(n)) || isNaN(time)) {
+        errs.push(t("manual.rowError", { n: i + 1, reason: t("manual.rowErrorMissing") }));
         continue;
       }
       if (h < Math.max(o, c) || l > Math.min(o, c) || h < l) {
-        errs.push(`Riga ${i + 1}: high/low incoerenti con open/close`);
+        errs.push(t("manual.rowError", { n: i + 1, reason: t("manual.rowErrorInconsistent") }));
         continue;
       }
-      out.push({ time: t, open: o, high: h, low: l, close: c, volume: isNaN(v) ? 0 : v });
+      out.push({ time, open: o, high: h, low: l, close: c, volume: isNaN(v) ? 0 : v });
     }
     out.sort((a, b) => a.time - b.time);
     return { candles: out, errors: errs };
-  }, [rows]);
+  }, [rows, t]);
 
   const analysis = useMemo(() => {
     if (candles.length < 2) return null;
@@ -248,14 +250,15 @@ function ManualEntryPage() {
           interval: interval.value,
           candles,
           horizon,
+          language: i18n.language as any,
         },
       }),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Previsione fallita"),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("analyze.forecastFailed")),
   });
 
   const saveMut = useMutation({
     mutationFn: () => {
-      if (!fcMut.data) throw new Error("Genera prima una previsione");
+      if (!fcMut.data) throw new Error(t("manual.genPredictionFirst"));
       return saveFn({
         data: {
           symbol: symbol.trim() || "MANUALE",
@@ -271,8 +274,8 @@ function ManualEntryPage() {
         },
       });
     },
-    onSuccess: () => { toast.success("Previsione salvata"); qc.invalidateQueries({ queryKey: ["predictions"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Errore"),
+    onSuccess: () => { toast.success(t("analyze.predictionSaved")); qc.invalidateQueries({ queryKey: ["predictions"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("common.error")),
   });
 
   const canForecast = candles.length >= 15;
@@ -280,35 +283,35 @@ function ManualEntryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/dashboard" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3 w-3" /> Dashboard</Link>
+        <Link to="/dashboard" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3 w-3" /> {t("nav.dashboard")}</Link>
         <div className="mt-1 flex items-center gap-2">
           <ImagePlus className="h-5 w-5 text-primary" />
-          <h1 className="text-2xl font-semibold">Inserimento manuale</h1>
+          <h1 className="text-2xl font-semibold">{t("manual.title")}</h1>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">
-          Guarda il grafico che ti interessa (screenshot, TradingView, ecc.) e trascrivi qui i valori OHLC delle candele. Nessun dato viene stimato dall'AI: i numeri sono esattamente quelli che inserisci tu.
+          {t("manual.subtitle")}
         </p>
       </div>
 
       {/* Metadata */}
       <div className="rounded-xl border border-border bg-card p-5 grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="text-xs text-muted-foreground">Simbolo / nome (libero, non deve esistere su Yahoo)</label>
+          <label className="text-xs text-muted-foreground">{t("manual.symbolLabel")}</label>
           <input
             value={symbol}
             onChange={(e) => setSymbol(e.target.value)}
-            placeholder="es. BTC/USD, il mio titolo, ecc."
+            placeholder={t("manual.symbolPlaceholder")}
             className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
           />
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Durata di ogni candela</label>
+          <label className="text-xs text-muted-foreground">{t("manual.candleDuration")}</label>
           <select
             value={interval.value}
             onChange={(e) => setIntervalValue(INTERVALS.find((i) => i.value === e.target.value)!)}
             className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
           >
-            {INTERVALS.map((i) => <option key={i.value} value={i.value}>{i.label}</option>)}
+            {INTERVALS.map((i) => <option key={i.value} value={i.value}>{t(`units.${i.value}`)}</option>)}
           </select>
         </div>
       </div>
@@ -316,16 +319,16 @@ function ManualEntryPage() {
       {/* Photo-assisted entry */}
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Estrai da una foto (stima, da correggere)</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.photoSectionTitle")}</h3>
           <button onClick={() => setPhotoOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
-            <Camera className="h-3.5 w-3.5" /> {photoOpen ? "Chiudi" : "Carica foto"}
+            <Camera className="h-3.5 w-3.5" /> {photoOpen ? t("manual.close") : t("manual.loadPhoto")}
           </button>
         </div>
 
         {photoOpen && (
           <div className="space-y-4">
             <p className="text-xs text-muted-foreground">
-              Carica una foto del grafico, indica quante candele sono visibili e inserisci i valori OHLC reali di almeno una candela (meglio due, es. la prima e l'ultima) per calibrare la scala dei prezzi. L'AI stima le altre candele — sono numeri approssimati, da rivedere prima di procedere.
+              {t("manual.photoHint")}
             </p>
 
             <div>
@@ -338,32 +341,32 @@ function ManualEntryPage() {
                 onChange={(e) => e.target.files?.[0] && onPhotoSelected(e.target.files[0])}
               />
               <button onClick={() => fileInputRef.current?.click()} className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-4 py-3 text-xs hover:bg-accent w-full justify-center">
-                <ImagePlus className="h-4 w-4" /> {photoDataUrl ? "Cambia foto" : "Scegli o scatta una foto"}
+                <ImagePlus className="h-4 w-4" /> {photoDataUrl ? t("manual.changePhoto") : t("manual.choosePhoto")}
               </button>
               {photoDataUrl && (
-                <img src={photoDataUrl} alt="Grafico caricato" className="mt-3 max-h-64 w-full rounded-md border border-border object-contain bg-black/20" />
+                <img src={photoDataUrl} alt="" className="mt-3 max-h-64 w-full rounded-md border border-border object-contain bg-black/20" />
               )}
             </div>
 
             <div>
-              <label className="text-xs text-muted-foreground">Quante candele sono visibili nel grafico?</label>
+              <label className="text-xs text-muted-foreground">{t("manual.visibleCandlesQuestion")}</label>
               <input type="number" min={2} max={150} value={totalCandlesVisible} onChange={(e) => setTotalCandlesVisible(e.target.value)} className="mt-1 w-32 rounded-md border border-border bg-background px-3 py-2 text-sm" />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs text-muted-foreground">Candele di calibrazione (valori reali noti)</label>
-                <button onClick={addCalibRow} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"><Plus className="h-3 w-3" /> Aggiungi</button>
+                <label className="text-xs text-muted-foreground">{t("manual.calibrationCandles")}</label>
+                <button onClick={addCalibRow} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] hover:bg-accent"><Plus className="h-3 w-3" /> {t("manual.add")}</button>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-muted-foreground text-left border-b border-border/60">
-                      <th className="py-1.5 pr-2">Posizione (da sx, 1 = prima)</th>
-                      <th className="py-1.5 pr-2">Open</th>
-                      <th className="py-1.5 pr-2">High</th>
-                      <th className="py-1.5 pr-2">Low</th>
-                      <th className="py-1.5 pr-2">Close</th>
+                      <th className="py-1.5 pr-2">{t("manual.colPosition")}</th>
+                      <th className="py-1.5 pr-2">{t("manual.colOpen")}</th>
+                      <th className="py-1.5 pr-2">{t("manual.colHigh")}</th>
+                      <th className="py-1.5 pr-2">{t("manual.colLow")}</th>
+                      <th className="py-1.5 pr-2">{t("manual.colClose")}</th>
                       <th className="py-1.5"></th>
                     </tr>
                   </thead>
@@ -387,16 +390,16 @@ function ManualEntryPage() {
               disabled={extractMut.isPending}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              <Wand2 className="h-3.5 w-3.5" /> {extractMut.isPending ? "Analizzo la foto…" : "Stima candele dalla foto"}
+              <Wand2 className="h-3.5 w-3.5" /> {extractMut.isPending ? t("manual.extracting") : t("manual.extractButton")}
             </button>
-            <p className="text-[11px] text-muted-foreground">Questo sostituirà le righe attuali nella tabella qui sotto con le candele stimate.</p>
+            <p className="text-[11px] text-muted-foreground">{t("manual.extractReplaceHint")}</p>
           </div>
         )}
 
         {extractNotes && (
           <div className="mt-4 flex items-start gap-2 rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-xs text-yellow-700 dark:text-yellow-400">
             <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-            <p><strong>Note dell'AI sulla stima:</strong> {extractNotes}</p>
+            <p><strong>{t("manual.extractNotesTitle")}</strong> {extractNotes}</p>
           </div>
         )}
       </div>
@@ -404,13 +407,13 @@ function ManualEntryPage() {
       {/* Table */}
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Candele ({candles.length} valide su {rows.length})</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.candlesCount", { valid: candles.length, total: rows.length })}</h3>
           <div className="flex gap-2">
             <button onClick={() => setPasteOpen((v) => !v)} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
-              <ClipboardPaste className="h-3.5 w-3.5" /> Incolla più righe
+              <ClipboardPaste className="h-3.5 w-3.5" /> {t("manual.pasteMultiple")}
             </button>
             <button onClick={addRow} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
-              <Plus className="h-3.5 w-3.5" /> Aggiungi candela
+              <Plus className="h-3.5 w-3.5" /> {t("manual.addCandle")}
             </button>
           </div>
         </div>
@@ -418,7 +421,7 @@ function ManualEntryPage() {
         {pasteOpen && (
           <div className="mb-4 rounded-md border border-border/60 p-3 space-y-2">
             <p className="text-xs text-muted-foreground">
-              Una candela per riga, valori separati da virgola o tab: <code className="rounded bg-muted px-1">open,high,low,close,volume</code> (volume opzionale). Le date vengono generate automaticamente in sequenza in base alla durata scelta sopra.
+              {t("manual.pasteHint")} <code className="rounded bg-muted px-1">open,high,low,close,volume</code> {t("manual.pasteHintSuffix")}
             </p>
             <textarea
               value={pasteText}
@@ -428,7 +431,7 @@ function ManualEntryPage() {
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-mono"
             />
             <button onClick={applyPaste} className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90">
-              Aggiungi righe
+              {t("manual.addRows")}
             </button>
           </div>
         )}
@@ -437,12 +440,12 @@ function ManualEntryPage() {
           <table className="w-full text-xs">
             <thead>
               <tr className="text-muted-foreground text-left border-b border-border/60">
-                <th className="py-2 pr-2">Data/ora</th>
-                <th className="py-2 pr-2">Open</th>
-                <th className="py-2 pr-2">High</th>
-                <th className="py-2 pr-2">Low</th>
-                <th className="py-2 pr-2">Close</th>
-                <th className="py-2 pr-2">Volume</th>
+                <th className="py-2 pr-2">{t("manual.colDate")}</th>
+                <th className="py-2 pr-2">{t("manual.colOpen")}</th>
+                <th className="py-2 pr-2">{t("manual.colHigh")}</th>
+                <th className="py-2 pr-2">{t("manual.colLow")}</th>
+                <th className="py-2 pr-2">{t("manual.colClose")}</th>
+                <th className="py-2 pr-2">{t("manual.colVolume")}</th>
                 <th className="py-2"></th>
               </tr>
             </thead>
@@ -475,7 +478,7 @@ function ManualEntryPage() {
           </div>
         )}
         {!canForecast && candles.length > 0 && (
-          <p className="mt-3 text-xs text-muted-foreground">Servono almeno 15 candele valide per generare una previsione AI (ne hai {candles.length}). Puoi comunque vedere indicatori e pattern con quelle già inserite.</p>
+          <p className="mt-3 text-xs text-muted-foreground">{t("manual.needMoreCandles", { count: candles.length })}</p>
         )}
       </div>
 
@@ -483,8 +486,8 @@ function ManualEntryPage() {
       {candles.length >= 2 && analysis && (
         <>
           <div className="flex items-center gap-2 text-xs">
-            <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showSMA} onChange={(e) => setShowSMA(e.target.checked)} /> SMA/EMA</label>
-            <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> Bollinger</label>
+            <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showSMA} onChange={(e) => setShowSMA(e.target.checked)} /> {t("manual.smaEma")}</label>
+            <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> {t("analyze.bollinger")}</label>
           </div>
 
           <CandlestickChartView candles={candles} predicted={fcMut.data?.candles} optimistic={fcMut.data?.optimistic} pessimistic={fcMut.data?.pessimistic} overlays={overlays} />
@@ -493,19 +496,19 @@ function ManualEntryPage() {
             <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4 text-primary" />
-                <span className="font-semibold text-sm">Previsione AI</span>
+                <span className="font-semibold text-sm">{t("manual.aiForecastTitle")}</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <label>Orizzonte:</label>
+                <label>{t("analyze.horizon")}</label>
                 {[5, 10, 20, 40].map((h) => (
                   <button key={h} onClick={() => setHorizon(h)} className={`rounded px-2 py-1 ${horizon === h ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>{h}</button>
                 ))}
                 <button onClick={() => fcMut.mutate()} disabled={!canForecast || fcMut.isPending} className="ml-2 inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50">
-                  <Brain className="h-3 w-3" />{fcMut.isPending ? "Genero…" : "Genera previsione"}
+                  <Brain className="h-3 w-3" />{fcMut.isPending ? t("analyze.generating") : t("analyze.generateForecast")}
                 </button>
                 {fcMut.data && (
                   <button onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
-                    <Save className="h-3 w-3" /> Salva
+                    <Save className="h-3 w-3" /> {t("common.save")}
                   </button>
                 )}
               </div>
@@ -514,46 +517,46 @@ function ManualEntryPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">{fcMut.data.rationale}</p>
-                  <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
-                  <p className="text-[11px] text-muted-foreground">La banda tratteggiata sul grafico mostra un range plausibile (±1 deviazione standard storica), non un altro scenario previsto dall'AI.</p>
+                  <p className="text-xs">{t("analyze.confidence")} <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+                  <p className="text-[11px] text-muted-foreground">{t("analyze.bandHint")}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">Probabilità direzionale a {horizon} candele</p>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">{t("analyze.directionalProbability", { horizon })}</p>
                   <DirectionalProbability probability={fcMut.data.directionalProbability} />
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">Clicca "Genera previsione" per far estendere il grafico con {horizon} candele previste dall'AI, calcolate sui dati che hai inserito.</p>
+              <p className="text-xs text-muted-foreground">{t("manual.aiForecastGeneric", { horizon })}</p>
             )}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Indicatori</h3>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.indicatorsTitle")}</h3>
               <div className="grid grid-cols-2 gap-3 text-sm tabular">
-                <IndRow label="Segnale complessivo" value={analysis.indicators.overallSignal.toUpperCase()} valueClass={signalColor(analysis.indicators.overallSignal) + " font-semibold"} />
+                <IndRow label={t("analyze.overallSignal")} value={analysis.indicators.overallSignal.toUpperCase()} valueClass={signalColor(analysis.indicators.overallSignal) + " font-semibold"} />
                 <IndRow label="RSI(14)" value={fmt(analysis.indicators.rsi14, 1)} pill={analysis.indicators.rsiSignal} />
                 <IndRow label="MACD hist" value={fmt(analysis.indicators.macd.hist, 3)} pill={analysis.indicators.macdSignal} />
-                <IndRow label="Trend EMA9/21" value={analysis.indicators.trendSignal.toUpperCase()} pill={analysis.indicators.trendSignal} />
-                <IndRow label="Bollinger" value={analysis.indicators.bollingerSignal.toUpperCase()} pill={analysis.indicators.bollingerSignal} />
-                <IndRow label="Stocastico %K" value={fmt(analysis.indicators.stochastic.k, 1)} pill={analysis.indicators.stochasticSignal} />
+                <IndRow label={t("analyze.trend")} value={analysis.indicators.trendSignal.toUpperCase()} pill={analysis.indicators.trendSignal} />
+                <IndRow label={t("analyze.bollinger")} value={analysis.indicators.bollingerSignal.toUpperCase()} pill={analysis.indicators.bollingerSignal} />
+                <IndRow label={t("analyze.stochastic")} value={fmt(analysis.indicators.stochastic.k, 1)} pill={analysis.indicators.stochasticSignal} />
                 <IndRow label="SMA20 / SMA50" value={`${fmt(analysis.indicators.sma20)} / ${fmt(analysis.indicators.sma50)}`} />
                 <IndRow label="SMA200" value={fmt(analysis.indicators.sma200)} />
               </div>
-              <p className="mt-3 text-[10px] text-muted-foreground">Gli indicatori che richiedono più storico di quello inserito (es. SMA200 con poche candele) mostrano "—".</p>
+              <p className="mt-3 text-[10px] text-muted-foreground">{t("manual.indicatorsHint")}</p>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Pattern candlestick rilevati</h3>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.patternsTitle")}</h3>
               {analysis.patterns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nessun pattern rilevante nelle candele inserite.</p>
+                <p className="text-sm text-muted-foreground">{t("manual.noPatterns")}</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {analysis.patterns.slice(-8).reverse().map((p, i) => (
                     <li key={i} className="flex items-start justify-between gap-2 rounded-md border border-border/60 p-2.5">
                       <div>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="text-xs text-muted-foreground">{p.description}</div>
+                        <div className="font-medium">{t(`patterns.${p.key}.name`, p.name)}</div>
+                        <div className="text-xs text-muted-foreground">{t(`patterns.${p.key}.description`, p.description)}</div>
                       </div>
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase ${signalBg(p.implication === "bullish" ? "buy" : p.implication === "bearish" ? "sell" : "hold")}`}>{p.implication}</span>
                     </li>

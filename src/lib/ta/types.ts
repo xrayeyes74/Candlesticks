@@ -31,9 +31,10 @@ export interface IndicatorSummary {
 export interface PatternHit {
   index: number;
   time: number;
-  name: string;
+  key: string; // stable id for i18n lookup, e.g. "doji", "bullish_engulfing"
+  name: string; // English fallback / used in AI prompts
   implication: "bullish" | "bearish" | "neutral";
-  description: string;
+  description: string; // English fallback
 }
 
 export interface Analysis {

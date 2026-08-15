@@ -1,0 +1,283 @@
+{
+  "common": {
+    "appName": "Candlestick AI",
+    "loading": "Chargement…",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "back": "Retour",
+    "analyze": "Analyser",
+    "goTo": "Aller",
+    "logout": "Déconnexion",
+    "disclaimer": "Les analyses et prévisions ne constituent pas un conseil financier.",
+    "error": "Erreur",
+    "confirm": "Confirmer",
+    "notFoundTitle": "Page non trouvée",
+    "notFoundDesc": "La page que vous cherchiez n'existe pas.",
+    "backHome": "Retour à l'accueil",
+    "somethingWrong": "Une erreur est survenue",
+    "retry": "Réessayer"
+  },
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "manual": "Saisie manuelle",
+    "predictions": "Prévisions"
+  },
+  "landing": {
+    "cta": "Se connecter",
+    "badge": "Analyse technique · Figures · Prévision IA · Backtest",
+    "titleLine1": "Lisez le graphique.",
+    "titleLine2": "Prévoyez le mouvement.",
+    "subtitle": "Graphiques en chandeliers, indicateurs classiques, reconnaissance de figures chartistes et une IA qui prolonge visuellement le graphique avec sa prévision. Comparez-la ensuite avec ce qui s'est réellement passé.",
+    "start": "Commencer gratuitement",
+    "howItWorks": "Comment ça marche",
+    "feature1Title": "Indicateurs techniques",
+    "feature1Desc": "RSI, MACD, moyennes mobiles, Bollinger, stochastique — avec signaux achat/vente/attente automatiques.",
+    "feature2Title": "Figures chartistes",
+    "feature2Desc": "Doji, marteau, avalement, étoile du matin/soir, trois soldats blancs et plus, détectés sur les dernières bougies.",
+    "feature3Title": "Prévision IA visuelle",
+    "feature3Desc": "Un modèle d'IA prolonge votre graphique avec N bougies prévues superposées aux données réelles.",
+    "feature4Title": "Backtest historique",
+    "feature4Desc": "Choisissez une date passée, générez la prévision de ce jour-là, comparez avec ce qui s'est réellement passé.",
+    "feature5Title": "Liste de suivi personnelle",
+    "feature5Desc": "Enregistrez vos titres et ouvrez l'analyse en un clic.",
+    "feature6Title": "Précision cumulative",
+    "feature6Desc": "Chaque prévision enregistrée est évaluée a posteriori : MAPE, direction correcte, erreur maximale.",
+    "footer": "Outil éducatif. Ne constitue pas un conseil financier. Source des données : Twelve Data."
+  },
+  "auth": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "continueWithGoogle": "Continuer avec Google",
+    "or": "ou",
+    "email": "Email",
+    "password": "Mot de passe",
+    "passwordHint": "min. 8 caractères",
+    "createAccount": "Créer un compte",
+    "accountCreated": "Compte créé ! Vous êtes connecté.",
+    "authError": "Erreur d'authentification",
+    "googleFailed": "Échec de la connexion Google",
+    "footer": "Aucun conseil financier. Outils éducatifs uniquement."
+  },
+  "dashboard": {
+    "greeting": "Salut 👋",
+    "subtitle": "Cherchez un titre, ouvrez-le et demandez une prévision à l'IA.",
+    "searchLabel": "Rechercher un titre (symbole ou nom)",
+    "searchPlaceholder": "AAPL, Tesla, ENI.MI ...",
+    "searching": "Recherche...",
+    "noResults": "Aucun résultat",
+    "watchlistTitle": "Votre liste de suivi",
+    "watchlistEmpty": "Encore vide. Cherchez un titre ci-dessus et enregistrez-le.",
+    "openAnalysis": "Ouvrir l'analyse",
+    "latestPredictions": "Dernières prévisions",
+    "seeAll": "Tout voir",
+    "noPredictions": "Aucune prévision enregistrée pour l'instant.",
+    "candles": "bougies",
+    "addedToWatchlist": "Ajouté à la liste de suivi"
+  },
+  "analyze": {
+    "candleDuration": "Durée de la bougie",
+    "historicalPeriod": "Période historique",
+    "insufficientData": "Historique trop court pour l'analyse.",
+    "indicators": "Indicateurs",
+    "overallSignal": "Signal global",
+    "trend": "Tendance EMA9/21",
+    "bollinger": "Bollinger",
+    "stochastic": "Stochastique %K",
+    "patternsDetected": "Figures chartistes détectées",
+    "noPatterns": "Aucune figure pertinente sur les bougies récentes.",
+    "aiForecast": "Prévision IA",
+    "horizon": "Horizon :",
+    "generateForecast": "Générer une prévision",
+    "generating": "Génération…",
+    "forecastHint": "Cliquez sur « Générer une prévision » pour prolonger le graphique avec {{horizon}} bougies prévues par l'IA.",
+    "confidence": "Confiance de l'IA :",
+    "bandHint": "La bande en pointillés sur le graphique montre une plage plausible (±1 écart-type historique), pas un autre scénario prévu par l'IA.",
+    "directionalProbability": "Probabilité directionnelle sur {{horizon}} bougies",
+    "forecastFailed": "Échec de la prévision",
+    "predictionSaved": "Prévision enregistrée",
+    "backtest": "Backtest"
+  },
+  "directional": {
+    "up": "Hausse",
+    "down": "Baisse",
+    "sideways": "Stable"
+  },
+  "manual": {
+    "title": "Saisie manuelle",
+    "subtitle": "Regardez le graphique qui vous intéresse (capture d'écran, TradingView, etc.) et saisissez ici les valeurs OHLC des bougies. Aucune donnée n'est estimée par l'IA : les chiffres sont exactement ceux que vous entrez.",
+    "symbolLabel": "Symbole / nom (libre, n'a pas besoin d'exister sur Yahoo)",
+    "symbolPlaceholder": "ex. BTC/USD, mon titre, etc.",
+    "candleDuration": "Durée de chaque bougie",
+    "candlesCount": "Bougies ({{valid}} valides sur {{total}})",
+    "pasteMultiple": "Coller plusieurs lignes",
+    "addCandle": "Ajouter une bougie",
+    "pasteHint": "Une bougie par ligne, valeurs séparées par une virgule ou une tabulation :",
+    "addRows": "Ajouter les lignes",
+    "rowsAdded": "{{count}} bougies ajoutées",
+    "colDate": "Date/heure",
+    "colOpen": "Ouv.",
+    "colHigh": "Haut",
+    "colLow": "Bas",
+    "colClose": "Clôt.",
+    "colVolume": "Volume",
+    "needMoreCandles": "Il faut au moins 15 bougies valides pour générer une prévision IA (vous en avez {{count}}). Vous pouvez tout de même voir les indicateurs et figures avec celles déjà saisies.",
+    "photoSectionTitle": "Extraire d'une photo (estimation, à corriger)",
+    "loadPhoto": "Charger une photo",
+    "close": "Fermer",
+    "photoHint": "Téléchargez une photo du graphique, indiquez combien de bougies sont visibles et saisissez les valeurs OHLC réelles d'au moins une bougie (idéalement deux, ex. la première et la dernière) pour calibrer l'échelle des prix. L'IA estime les autres bougies — ce sont des chiffres approximatifs, à vérifier avant de continuer.",
+    "changePhoto": "Changer de photo",
+    "choosePhoto": "Choisir ou prendre une photo",
+    "visibleCandlesQuestion": "Combien de bougies sont visibles sur le graphique ?",
+    "calibrationCandles": "Bougies de calibration (valeurs réelles connues)",
+    "add": "Ajouter",
+    "colPosition": "Position (depuis la gauche, 1 = première)",
+    "extractButton": "Estimer les bougies depuis la photo",
+    "extracting": "Analyse de la photo…",
+    "extractReplaceHint": "Ceci remplacera les lignes actuelles du tableau ci-dessous par les bougies estimées.",
+    "extractSuccess": "{{count}} bougies estimées depuis la photo — vérifiez-les avant de continuer",
+    "extractNotesTitle": "Notes de l'IA sur l'estimation :",
+    "extractFailed": "Échec de l'extraction",
+    "extractMissingPhoto": "Téléchargez d'abord une photo du graphique",
+    "extractMissingTotal": "Indiquez combien de bougies sont visibles sur le graphique",
+    "extractMissingCalibration": "Il faut au moins une bougie de calibration remplie",
+    "smaEma": "SMA/EMA",
+    "aiForecastTitle": "Prévision IA",
+    "aiForecastGeneric": "Cliquez sur « Générer une prévision » pour prolonger le graphique avec {{horizon}} bougies prévues par l'IA, calculées à partir des données saisies.",
+    "genPredictionFirst": "Générez d'abord une prévision",
+    "indicatorsTitle": "Indicateurs",
+    "indicatorsHint": "Les indicateurs nécessitant plus d'historique que ce qui a été saisi (ex. SMA200 avec peu de bougies) affichent « — ».",
+    "patternsTitle": "Figures chartistes détectées",
+    "noPatterns": "Aucune figure pertinente dans les bougies saisies.",
+    "rowError": "Ligne {{n}} : {{reason}}",
+    "rowErrorMissing": "valeurs manquantes ou non numériques",
+    "rowErrorInconsistent": "high/low incohérents avec open/close",
+    "pasteHintSuffix": "(volume optionnel). Les dates sont générées automatiquement en séquence selon la durée choisie ci-dessus."
+  },
+  "backtest": {
+    "title": "Backtest",
+    "subtitle": "Choisissez une date historique, générez la prévision comme si c'était ce jour-là, et comparez-la avec ce qui s'est réellement passé.",
+    "date": "Date",
+    "candleDuration": "Durée de la bougie",
+    "horizon": "Horizon (bougies)",
+    "run": "Lancer le backtest",
+    "running": "Exécution…",
+    "needMoreHistory": "Il faut plus d'historique avant la date choisie",
+    "needMoreFuture": "Historique postérieur insuffisant pour l'évaluation",
+    "legendHistory": "Historique réel (bougies)",
+    "legendPrediction": "Prévision IA",
+    "legendActual": "Clôture réelle après l'ancrage",
+    "probabilityBeforeOutcome": "Probabilité directionnelle estimée par l'IA (avant de connaître le résultat)",
+    "realOutcome": "Résultat réel :",
+    "directionCorrect": "direction correcte",
+    "directionWrong": "direction incorrecte",
+    "mape": "Erreur moyenne (MAPE)",
+    "maxError": "Erreur maximale",
+    "backToAnalysis": "Retour à l'analyse",
+    "pageSubtitle": "Choisissez une date passée. L'IA générera la prévision en utilisant uniquement les données jusqu'à cette date, et nous la comparerons avec ce qui s'est réellement passé ensuite.",
+    "anchorDate": "Date d'ancrage",
+    "mapeHint": "Erreur % moyenne sur les clôtures",
+    "correct": "Correcte",
+    "wrong": "Incorrecte"
+  },
+  "predictions": {
+    "title": "Prévisions enregistrées",
+    "subtitle": "Chaque prévision peut être évaluée a posteriori en comparant les bougies prévues avec les bougies réelles qui ont suivi.",
+    "statsTitle": "Fiabilité historique (basée sur les backtests évalués)",
+    "statsEmpty": "Aucune prévision évaluée pour l'instant — utilisez « Évaluer » ci-dessous ou essayez un backtest pour commencer à construire un historique réel, plutôt que de faire confiance aveuglément.",
+    "evaluated": "Prévisions évaluées",
+    "directionAccuracy": "Direction correcte",
+    "avgMape": "Erreur moyenne (MAPE)",
+    "coinFlipHint": "50 % de direction correcte équivaut à un pile ou face — c'est le repère minimal pour savoir si l'IA apporte quelque chose d'utile sur ce type de données.",
+    "empty": "Aucune prévision enregistrée. Allez sur un titre et cliquez sur « Enregistrer ».",
+    "evaluate": "Évaluer",
+    "evaluated_toast": "Évalué",
+    "evaluationError": "Erreur d'évaluation",
+    "pendingHistory": "Historique postérieur pas encore disponible.",
+    "direction": "Direction"
+  },
+  "language": {
+    "label": "Langue"
+  },
+  "units": {
+    "1m": "1 minute",
+    "5m": "5 minutes",
+    "15m": "15 minutes",
+    "30m": "30 minutes",
+    "1h": "1 heure",
+    "4h": "4 heures",
+    "1d": "1 jour",
+    "1wk": "1 semaine",
+    "1mo": "1 mois",
+    "5d": "5 jours",
+    "3mo": "3 mois",
+    "6mo": "6 mois",
+    "1y": "1 an",
+    "2y": "2 ans",
+    "5y": "5 ans",
+    "10y": "10 ans",
+    "max": "Maximum disponible"
+  },
+  "patterns": {
+    "doji": {
+      "name": "Doji",
+      "description": "Indécision : ouverture ≈ clôture."
+    },
+    "hammer": {
+      "name": "Marteau",
+      "description": "Longue ombre basse après une baisse : possible retournement haussier."
+    },
+    "hanging_man": {
+      "name": "Homme pendu",
+      "description": "Petit corps en haut après une hausse : possible retournement baissier."
+    },
+    "shooting_star": {
+      "name": "Étoile filante",
+      "description": "Rejet des sommets après une hausse : possible retournement baissier."
+    },
+    "inverted_hammer": {
+      "name": "Marteau inversé",
+      "description": "Possible retournement haussier, à confirmer avec la bougie suivante."
+    },
+    "marubozu_white": {
+      "name": "Marubozu blanc",
+      "description": "Corps plein sans ombres : forte pression directionnelle."
+    },
+    "marubozu_black": {
+      "name": "Marubozu noir",
+      "description": "Corps plein sans ombres : forte pression directionnelle."
+    },
+    "bullish_engulfing": {
+      "name": "Avalement haussier",
+      "description": "La bougie verte engloutit la rouge précédente."
+    },
+    "bearish_engulfing": {
+      "name": "Avalement baissier",
+      "description": "La bougie rouge engloutit la verte précédente."
+    },
+    "bearish_harami": {
+      "name": "Harami baissier",
+      "description": "Petit corps baissier à l'intérieur du corps haussier précédent."
+    },
+    "bullish_harami": {
+      "name": "Harami haussier",
+      "description": "Petit corps haussier à l'intérieur du corps baissier précédent."
+    },
+    "morning_star": {
+      "name": "Étoile du matin",
+      "description": "Formation de retournement haussier à trois bougies."
+    },
+    "evening_star": {
+      "name": "Étoile du soir",
+      "description": "Formation de retournement baissier à trois bougies."
+    },
+    "three_white_soldiers": {
+      "name": "Trois soldats blancs",
+      "description": "Trois bougies vertes consécutives avec des clôtures croissantes."
+    },
+    "three_black_crows": {
+      "name": "Trois corbeaux noirs",
+      "description": "Trois bougies rouges consécutives avec des clôtures décroissantes."
+    }
+  }
+}

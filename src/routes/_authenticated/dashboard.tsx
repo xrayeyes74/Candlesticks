@@ -5,6 +5,7 @@ import { listWatchlist, addWatchlist, removeWatchlist, listPredictions } from "@
 import { searchSymbols } from "@/lib/market.functions";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { Search, Plus, X, TrendingUp, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -13,6 +14,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const { t } = useTranslation();
   const router = useRouter();
   const qc = useQueryClient();
   const listWl = useServerFn(listWatchlist);
@@ -47,8 +49,8 @@ function Dashboard() {
 
   const addM = useMutation({
     mutationFn: (symbol: string) => addWl({ data: { symbol } }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["watchlist"] }); toast.success("Aggiunto alla watchlist"); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Errore"),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["watchlist"] }); toast.success(t("dashboard.addedToWatchlist")); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("common.error")),
   });
   const rmM = useMutation({
     mutationFn: (symbol: string) => rmWl({ data: { symbol } }),
@@ -58,20 +60,20 @@ function Dashboard() {
   return (
     <div className="space-y-8">
       <section>
-        <h1 className="text-2xl font-semibold">Ciao 👋</h1>
-        <p className="text-sm text-muted-foreground">Cerca un titolo, aprilo e chiedi una previsione all'AI.</p>
+        <h1 className="text-2xl font-semibold">{t("dashboard.greeting")}</h1>
+        <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5">
-        <label className="text-xs text-muted-foreground">Cerca titolo (ticker o nome)</label>
+        <label className="text-xs text-muted-foreground">{t("dashboard.searchLabel")}</label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <input value={q} onChange={(e) => onSearchInput(e.target.value)} placeholder="AAPL, Tesla, ENI.MI ..." className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2.5 text-sm" />
+          <input value={q} onChange={(e) => onSearchInput(e.target.value)} placeholder={t("dashboard.searchPlaceholder")} className="w-full rounded-md border border-input bg-background pl-9 pr-3 py-2.5 text-sm" />
         </div>
         {q && (
           <div className="mt-3 divide-y divide-border/60">
-            {searching && <div className="py-2 text-sm text-muted-foreground">Cerco...</div>}
-            {!searching && results.length === 0 && <div className="py-2 text-sm text-muted-foreground">Nessun risultato</div>}
+            {searching && <div className="py-2 text-sm text-muted-foreground">{t("dashboard.searching")}</div>}
+            {!searching && results.length === 0 && <div className="py-2 text-sm text-muted-foreground">{t("dashboard.noResults")}</div>}
             {results.map((r) => (
               <div key={r.symbol} className="flex items-center justify-between py-2">
                 <div>
@@ -79,8 +81,8 @@ function Dashboard() {
                   <div className="text-xs text-muted-foreground">{r.longname || r.shortname}</div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => addM.mutate(r.symbol)} className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"><Plus className="inline h-3 w-3 mr-1" />Salva</button>
-                  <button onClick={() => router.navigate({ to: "/analyze/$symbol", params: { symbol: r.symbol } })} className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:opacity-90">Analizza <ArrowRight className="inline h-3 w-3 ml-1" /></button>
+                  <button onClick={() => addM.mutate(r.symbol)} className="rounded-md border border-border px-2.5 py-1 text-xs hover:bg-accent"><Plus className="inline h-3 w-3 mr-1" />{t("common.save")}</button>
+                  <button onClick={() => router.navigate({ to: "/analyze/$symbol", params: { symbol: r.symbol } })} className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground hover:opacity-90">{t("common.analyze")} <ArrowRight className="inline h-3 w-3 ml-1" /></button>
                 </div>
               </div>
             ))}
@@ -89,11 +91,11 @@ function Dashboard() {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">La tua watchlist</h2>
-        {wl.isLoading ? <div className="text-sm text-muted-foreground">Caricamento…</div> :
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("dashboard.watchlistTitle")}</h2>
+        {wl.isLoading ? <div className="text-sm text-muted-foreground">{t("common.loading")}</div> :
           !wl.data || wl.data.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-              Ancora vuota. Cerca un titolo qui sopra e salvalo.
+              {t("dashboard.watchlistEmpty")}
             </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -103,7 +105,7 @@ function Dashboard() {
                   <Link to="/analyze/$symbol" params={{ symbol: w.symbol }} className="block">
                     <div className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /><span className="font-semibold">{w.symbol}</span></div>
                     {w.note && <p className="mt-1 text-xs text-muted-foreground">{w.note}</p>}
-                    <div className="mt-3 text-xs text-primary flex items-center gap-1">Apri analisi <ArrowRight className="h-3 w-3" /></div>
+                    <div className="mt-3 text-xs text-primary flex items-center gap-1">{t("dashboard.openAnalysis")} <ArrowRight className="h-3 w-3" /></div>
                   </Link>
                 </div>
               ))}
@@ -114,18 +116,18 @@ function Dashboard() {
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Ultime previsioni</h2>
-          <Link to="/predictions" className="text-xs text-primary hover:underline">Vedi tutte</Link>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("dashboard.latestPredictions")}</h2>
+          <Link to="/predictions" className="text-xs text-primary hover:underline">{t("dashboard.seeAll")}</Link>
         </div>
-        {preds.isLoading ? <div className="text-sm text-muted-foreground">Caricamento…</div> :
+        {preds.isLoading ? <div className="text-sm text-muted-foreground">{t("common.loading")}</div> :
           !preds.data || preds.data.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Ancora nessuna previsione salvata.</div>
+            <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{t("dashboard.noPredictions")}</div>
           ) : (
             <div className="grid gap-2">
               {preds.data.slice(0, 5).map((p) => (
                 <Link key={p.id} to="/predictions" className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-2.5 text-sm hover:bg-accent">
-                  <div><span className="font-medium">{p.symbol}</span> <span className="text-muted-foreground text-xs">{p.interval} · {p.horizon_candles} candele</span></div>
-                  <span className="text-xs text-muted-foreground">{new Date(p.made_at).toLocaleDateString("it-IT")}</span>
+                  <div><span className="font-medium">{p.symbol}</span> <span className="text-muted-foreground text-xs">{p.interval} · {p.horizon_candles} {t("dashboard.candles")}</span></div>
+                  <span className="text-xs text-muted-foreground">{new Date(p.made_at).toLocaleDateString()}</span>
                 </Link>
               ))}
             </div>

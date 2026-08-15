@@ -7,37 +7,17 @@ import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import { sma, ema, bollinger } from "@/lib/ta/indicators";
 import { Brain, Save, Star, ArrowLeft, History } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/analyze/$symbol")({
   component: AnalyzePage,
-  head: ({ params }) => ({ meta: [{ title: `${params.symbol} — Analisi tecnica` }] }),
+  head: ({ params }) => ({ meta: [{ title: `${params.symbol} — Candlestick AI` }] }),
 });
 
-const INTERVAL_OPTIONS = [
-  { value: "1m", label: "1 minuto" },
-  { value: "5m", label: "5 minuti" },
-  { value: "15m", label: "15 minuti" },
-  { value: "30m", label: "30 minuti" },
-  { value: "1h", label: "1 ora" },
-  { value: "4h", label: "4 ore" },
-  { value: "1d", label: "1 giorno" },
-  { value: "1wk", label: "1 settimana" },
-  { value: "1mo", label: "1 mese" },
-] as const;
-
-const RANGE_OPTIONS = [
-  { value: "5d", label: "5 giorni" },
-  { value: "1mo", label: "1 mese" },
-  { value: "3mo", label: "3 mesi" },
-  { value: "6mo", label: "6 mesi" },
-  { value: "1y", label: "1 anno" },
-  { value: "2y", label: "2 anni" },
-  { value: "5y", label: "5 anni" },
-  { value: "10y", label: "10 anni" },
-  { value: "max", label: "Massimo disponibile" },
-] as const;
+const INTERVAL_OPTIONS = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"] as const;
+const RANGE_OPTIONS = ["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "max"] as const;
 
 function fmt(n: number | null | undefined, d = 2) { return n == null || !isFinite(n) ? "—" : n.toFixed(d); }
 function pct(n: number | null | undefined) { return n == null ? "—" : `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`; }
@@ -45,9 +25,10 @@ function signalColor(s: string) { return s === "buy" ? "text-bull" : s === "sell
 function signalBg(s: string) { return s === "buy" ? "bg-bull/15 text-bull border-bull/30" : s === "sell" ? "bg-bear/15 text-bear border-bear/30" : "bg-muted text-muted-foreground border-border"; }
 
 function AnalyzePage() {
+  const { t, i18n } = useTranslation();
   const { symbol } = Route.useParams();
-  const [interval, setInterval] = useState<(typeof INTERVAL_OPTIONS)[number]["value"]>("1d");
-  const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]["value"]>("1y");
+  const [interval, setInterval] = useState<(typeof INTERVAL_OPTIONS)[number]>("1d");
+  const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>("1y");
   const [horizon, setHorizon] = useState(10);
   const [showSMA, setShowSMA] = useState(true);
   const [showBB, setShowBB] = useState(false);
@@ -64,13 +45,13 @@ function AnalyzePage() {
   });
 
   const fcMut = useMutation({
-    mutationFn: () => forecast({ data: { symbol, interval: interval as any, range: range as any, horizon } }),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Previsione fallita"),
+    mutationFn: () => forecast({ data: { symbol, interval: interval as any, range: range as any, horizon, language: i18n.language } }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("analyze.forecastFailed")),
   });
 
   const saveMut = useMutation({
     mutationFn: () => {
-      if (!fcMut.data || !data.data) throw new Error("Genera prima una previsione");
+      if (!fcMut.data || !data.data) throw new Error(t("manual.genPredictionFirst"));
       return save({
         data: {
           symbol, interval,
@@ -85,8 +66,8 @@ function AnalyzePage() {
         },
       });
     },
-    onSuccess: () => { toast.success("Previsione salvata"); qc.invalidateQueries({ queryKey: ["predictions"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "Errore"),
+    onSuccess: () => { toast.success(t("analyze.predictionSaved")); qc.invalidateQueries({ queryKey: ["predictions"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : t("common.error")),
   });
 
   const overlays = useMemo(() => {
@@ -113,7 +94,7 @@ function AnalyzePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <Link to="/dashboard" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3 w-3" /> Dashboard</Link>
+          <Link to="/dashboard" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="h-3 w-3" /> {t("nav.dashboard")}</Link>
           <div className="mt-1 flex items-center gap-3">
             <h1 className="text-2xl font-semibold tabular">{symbol}</h1>
             {data.data && (
@@ -125,31 +106,31 @@ function AnalyzePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => addWl({ data: { symbol } }).then(() => toast.success("Aggiunto alla watchlist")).catch((e) => toast.error(e.message))} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><Star className="h-3.5 w-3.5" /> Watchlist</button>
-          <Link to="/backtest/$symbol" params={{ symbol }} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><History className="h-3.5 w-3.5" /> Backtest</Link>
+          <button onClick={() => addWl({ data: { symbol } }).then(() => toast.success(t("dashboard.addedToWatchlist"))).catch((e) => toast.error(e.message))} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><Star className="h-3.5 w-3.5" /> Watchlist</button>
+          <Link to="/backtest/$symbol" params={{ symbol }} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><History className="h-3.5 w-3.5" /> {t("analyze.backtest")}</Link>
         </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="text-xs text-muted-foreground">Durata candela</label>
+          <label className="text-xs text-muted-foreground">{t("analyze.candleDuration")}</label>
           <select value={interval} onChange={(e) => setInterval(e.target.value as any)} className="mt-1 block rounded-md border border-input bg-background px-3 py-2 text-sm">
-            {INTERVAL_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {INTERVAL_OPTIONS.map((o) => <option key={o} value={o}>{t(`units.${o}`)}</option>)}
           </select>
         </div>
         <div>
-          <label className="text-xs text-muted-foreground">Periodo storico</label>
+          <label className="text-xs text-muted-foreground">{t("analyze.historicalPeriod")}</label>
           <select value={range} onChange={(e) => setRange(e.target.value as any)} className="mt-1 block rounded-md border border-input bg-background px-3 py-2 text-sm">
-            {RANGE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {RANGE_OPTIONS.map((o) => <option key={o} value={o}>{t(`units.${o}`)}</option>)}
           </select>
         </div>
         <div className="ml-auto flex gap-2 items-center text-xs pb-2">
-          <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showSMA} onChange={(e) => setShowSMA(e.target.checked)} /> SMA/EMA</label>
-          <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> Bollinger</label>
+          <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showSMA} onChange={(e) => setShowSMA(e.target.checked)} /> {t("manual.smaEma")}</label>
+          <label className="inline-flex items-center gap-1"><input type="checkbox" checked={showBB} onChange={(e) => setShowBB(e.target.checked)} /> {t("analyze.bollinger")}</label>
         </div>
       </div>
 
-      {data.isLoading && <div className="h-[460px] flex items-center justify-center text-muted-foreground">Carico dati…</div>}
+      {data.isLoading && <div className="h-[460px] flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>}
       {data.error && <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive-foreground">{(data.error as Error).message}</div>}
       {data.data && (
         <>
@@ -165,19 +146,19 @@ function AnalyzePage() {
             <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <Brain className="h-4 w-4 text-primary" />
-                <span className="font-semibold text-sm">Previsione AI</span>
+                <span className="font-semibold text-sm">{t("analyze.aiForecast")}</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <label>Orizzonte:</label>
+                <label>{t("analyze.horizon")}</label>
                 {[5, 10, 20, 40, 60].map((h) => (
                   <button key={h} onClick={() => setHorizon(h)} className={`rounded px-2 py-1 ${horizon === h ? "bg-primary text-primary-foreground" : "border border-border hover:bg-accent"}`}>{h}</button>
                 ))}
                 <button onClick={() => fcMut.mutate()} disabled={fcMut.isPending} className="ml-2 inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50">
-                  <Brain className="h-3 w-3" />{fcMut.isPending ? "Genero…" : "Genera previsione"}
+                  <Brain className="h-3 w-3" />{fcMut.isPending ? t("analyze.generating") : t("analyze.generateForecast")}
                 </button>
                 {fcMut.data && (
                   <button onClick={() => saveMut.mutate()} disabled={saveMut.isPending} className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent">
-                    <Save className="h-3 w-3" /> Salva
+                    <Save className="h-3 w-3" /> {t("common.save")}
                   </button>
                 )}
               </div>
@@ -186,46 +167,46 @@ function AnalyzePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">{fcMut.data.rationale}</p>
-                  <p className="text-xs">Confidenza AI: <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
-                  <p className="text-[11px] text-muted-foreground">La banda tratteggiata sul grafico mostra un range plausibile (±1 deviazione standard storica), non un altro scenario previsto dall'AI.</p>
+                  <p className="text-xs">{t("analyze.confidence")} <span className="tabular">{Math.round(fcMut.data.confidence * 100)}%</span></p>
+                  <p className="text-[11px] text-muted-foreground">{t("analyze.bandHint")}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium text-muted-foreground">Probabilità direzionale a {horizon} candele</p>
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">{t("analyze.directionalProbability", { horizon })}</p>
                   <DirectionalProbability probability={fcMut.data.directionalProbability} />
                 </div>
               </div>
             ) : (
-              <p className="text-xs text-muted-foreground">Clicca "Genera previsione" per far estendere il grafico con {horizon} candele previste dall'AI.</p>
+              <p className="text-xs text-muted-foreground">{t("analyze.forecastHint", { horizon })}</p>
             )}
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Indicatori</h3>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("analyze.indicators")}</h3>
               <div className="grid grid-cols-2 gap-3 text-sm tabular">
-                <IndRow label="Segnale complessivo" value={data.data.analysis.indicators.overallSignal.toUpperCase()} valueClass={signalColor(data.data.analysis.indicators.overallSignal) + " font-semibold"} />
+                <IndRow label={t("analyze.overallSignal")} value={data.data.analysis.indicators.overallSignal.toUpperCase()} valueClass={signalColor(data.data.analysis.indicators.overallSignal) + " font-semibold"} />
                 <IndRow label="RSI(14)" value={fmt(data.data.analysis.indicators.rsi14, 1)} pill={data.data.analysis.indicators.rsiSignal} />
                 <IndRow label="MACD hist" value={fmt(data.data.analysis.indicators.macd.hist, 3)} pill={data.data.analysis.indicators.macdSignal} />
-                <IndRow label="Trend EMA9/21" value={data.data.analysis.indicators.trendSignal.toUpperCase()} pill={data.data.analysis.indicators.trendSignal} />
-                <IndRow label="Bollinger" value={data.data.analysis.indicators.bollingerSignal.toUpperCase()} pill={data.data.analysis.indicators.bollingerSignal} />
-                <IndRow label="Stocastico %K" value={fmt(data.data.analysis.indicators.stochastic.k, 1)} pill={data.data.analysis.indicators.stochasticSignal} />
+                <IndRow label={t("analyze.trend")} value={data.data.analysis.indicators.trendSignal.toUpperCase()} pill={data.data.analysis.indicators.trendSignal} />
+                <IndRow label={t("analyze.bollinger")} value={data.data.analysis.indicators.bollingerSignal.toUpperCase()} pill={data.data.analysis.indicators.bollingerSignal} />
+                <IndRow label={t("analyze.stochastic")} value={fmt(data.data.analysis.indicators.stochastic.k, 1)} pill={data.data.analysis.indicators.stochasticSignal} />
                 <IndRow label="SMA20 / SMA50" value={`${fmt(data.data.analysis.indicators.sma20)} / ${fmt(data.data.analysis.indicators.sma50)}`} />
                 <IndRow label="SMA200" value={fmt(data.data.analysis.indicators.sma200)} />
               </div>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-5">
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Pattern candlestick recenti</h3>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("analyze.patternsDetected")}</h3>
               {data.data.analysis.patterns.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nessun pattern rilevante nelle ultime 20 candele.</p>
+                <p className="text-sm text-muted-foreground">{t("analyze.noPatterns")}</p>
               ) : (
                 <ul className="space-y-2 text-sm">
                   {data.data.analysis.patterns.slice(-8).reverse().map((p, i) => (
                     <li key={i} className="flex items-start justify-between gap-2 rounded-md border border-border/60 p-2.5">
                       <div>
-                        <div className="font-medium">{p.name}</div>
-                        <div className="text-xs text-muted-foreground">{p.description}</div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">{new Date(p.time * 1000).toLocaleDateString("it-IT")}</div>
+                        <div className="font-medium">{t(`patterns.${p.key}.name`, p.name)}</div>
+                        <div className="text-xs text-muted-foreground">{t(`patterns.${p.key}.description`, p.description)}</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">{new Date(p.time * 1000).toLocaleDateString(i18n.language)}</div>
                       </div>
                       <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] uppercase ${signalBg(p.implication === "bullish" ? "buy" : p.implication === "bearish" ? "sell" : "hold")}`}>{p.implication}</span>
                     </li>

@@ -45,12 +45,12 @@ export function CandlestickChartView({ candles, predicted, actual, optimistic, p
       mainSeries.setData(candles.map((c) => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close })));
 
       if (predicted && predicted.length) {
-        const predSeries = chart.addSeries(lib.CandlestickSeries, {
-          upColor: "rgba(139,120,255,0.55)", downColor: "rgba(139,120,255,0.35)",
-          borderUpColor: "#8b78ff", borderDownColor: "#8b78ff",
-          wickUpColor: "#8b78ff", wickDownColor: "#8b78ff",
+        const predLine = chart.addSeries(lib.LineSeries, {
+          color: "#8b78ff", lineWidth: 2, lastValueVisible: false, priceLineVisible: false,
         });
-        predSeries.setData(predicted.map((c) => ({ time: c.time as any, open: c.open, high: c.high, low: c.low, close: c.close })));
+        // Bridge the gap visually by starting the forecast line from today's last close.
+        const bridge = candles.length ? [{ time: candles[candles.length - 1].time as any, value: candles[candles.length - 1].close }] : [];
+        predLine.setData([...bridge, ...predicted.map((c) => ({ time: c.time as any, value: c.close }))]);
       }
 
       if (actual && actual.length) {
@@ -60,17 +60,19 @@ export function CandlestickChartView({ candles, predicted, actual, optimistic, p
         actSeries.setData(actual.map((c) => ({ time: c.time as any, value: c.close })));
       }
 
+      const anchor = candles.length ? { time: candles[candles.length - 1].time as any, value: candles[candles.length - 1].close } : null;
+
       if (optimistic && optimistic.length) {
         const optSeries = chart.addSeries(lib.LineSeries, {
-          color: "rgba(139,120,255,0.45)", lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false,
+          color: "rgba(139,120,255,0.55)", lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false,
         });
-        optSeries.setData(optimistic.map((d) => ({ time: d.time as any, value: d.value })));
+        optSeries.setData([...(anchor ? [anchor] : []), ...optimistic.map((d) => ({ time: d.time as any, value: d.value }))]);
       }
       if (pessimistic && pessimistic.length) {
         const pesSeries = chart.addSeries(lib.LineSeries, {
-          color: "rgba(139,120,255,0.45)", lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false,
+          color: "rgba(139,120,255,0.55)", lineWidth: 1, lineStyle: 2, lastValueVisible: false, priceLineVisible: false,
         });
-        pesSeries.setData(pessimistic.map((d) => ({ time: d.time as any, value: d.value })));
+        pesSeries.setData([...(anchor ? [anchor] : []), ...pessimistic.map((d) => ({ time: d.time as any, value: d.value }))]);
       }
 
       if (overlays) {

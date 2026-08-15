@@ -75,17 +75,25 @@ interface ForecastResult {
   pessimistic: { time: number; value: number }[];
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  it: "italiano",
+  en: "English",
+  fr: "français",
+  es: "español",
+};
+
 async function callForecast(
   symbol: string,
   interval: string,
   candles: Candle[],
   horizon: number,
+  language = "it",
 ): Promise<ForecastResult> {
   const attempts = 3;
   let lastError: unknown;
   for (let i = 0; i < attempts; i++) {
     try {
-      return await callForecastOnce(symbol, interval, candles, horizon);
+      return await callForecastOnce(symbol, interval, candles, horizon, language);
     } catch (error) {
       lastError = error;
       // The model occasionally emits malformed JSON — this is intermittent, not
@@ -94,8 +102,8 @@ async function callForecast(
     }
   }
   throw new Error(
-    `Il modello AI non è riuscito a generare una previsione valida dopo ${attempts} tentativi. Riprova tra poco.` +
-      (lastError instanceof Error ? ` (dettaglio: ${lastError.message})` : ""),
+    `AI forecast failed after ${attempts} attempts. Please try again shortly.` +
+      (lastError instanceof Error ? ` (detail: ${lastError.message})` : ""),
   );
 }
 
@@ -104,6 +112,7 @@ async function callForecastOnce(
   interval: string,
   candles: Candle[],
   horizon: number,
+  language: string,
 ): Promise<ForecastResult> {
   const apiKey = process.env.AI_API_KEY;
   if (!apiKey) throw new Error("AI_API_KEY mancante");
@@ -116,6 +125,7 @@ async function callForecastOnce(
   const last = candles[candles.length - 1];
   const stepSec = intervalSeconds(interval);
   const vol = historicalVolatility(candles);
+  const languageName = LANGUAGE_NAMES[language] ?? LANGUAGE_NAMES.it;
 
   const prompt = `Sei un analista tecnico. Dato lo storico OHLC del titolo ${symbol} (intervallo ${interval}) e un riassunto degli indicatori, valuta lo scenario più probabile per le prossime ${horizon} candele.
 
@@ -131,7 +141,7 @@ Rispetta queste regole:
 - "directionalProbability": tre numeri tra 0 e 1 che sommano a 1, la tua stima onesta della probabilità che il prezzo dopo ${horizon} candele sia rispettivamente più alto (up), più basso (down), o sostanzialmente invariato entro ±1 deviazione standard (sideways) rispetto ad oggi. Se l'analisi tecnica è ambigua o debole, NON avere paura di dare probabilità vicine a 1/3 ciascuna — è il risultato onesto, non un fallimento.
 - Considera indicatori: RSI ${indicators.rsi14?.toFixed(1)}, MACD hist ${indicators.macd.hist?.toFixed(3)}, trend EMA9/21 ${indicators.trendSignal}, Bollinger ${indicators.bollingerSignal}, segnale complessivo ${indicators.overallSignal}.
 - Pattern recenti: ${patterns.map((p) => `${p.name}(${p.implication})`).join(", ") || "nessuno rilevante"}.
-- "rationale": 3-5 frasi in italiano che spiegano il ragionamento dietro le probabilità direzionali, basato sull'analisi tecnica.
+- "rationale": 3-5 frasi che spiegano il ragionamento dietro le probabilità direzionali, basato sull'analisi tecnica. IMPORTANTE: scrivi il testo di "rationale" interamente in ${languageName}, indipendentemente dalla lingua di questo prompt. I nomi dei campi JSON restano invariati (in inglese).
 - "confidence": numero tra 0 e 1, quanto sei sicuro della tua analisi (non della direzione dei prezzi in sé).
 
 Ultime 120 candele (time,open,high,low,close):
@@ -236,11 +246,14 @@ function normalize(
 
 // ---- Server functions ----
 
+const LanguageSchema = z.enum(["it", "en", "fr", "es"]).catch("it");
+
 const ForecastInput = z.object({
   symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()),
   interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
   range: z.string().default("1y"),
   horizon: z.number().int().min(3).max(90).default(10),
+  language: LanguageSchema.default("it"),
 });
 
 export const generateForecast = createServerFn({ method: "POST" })
@@ -249,7 +262,7 @@ export const generateForecast = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const candles = await fetchHistory(data.symbol, data.interval, data.range);
     if (candles.length < 30) throw new Error("Storico troppo corto");
-    const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon);
+    const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon, data.language);
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
   });
 
@@ -261,6 +274,7 @@ const ForecastFromCandlesInput = z.object({
   interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
   candles: z.array(ManualCandleSchema).min(15, "Servono almeno 15 candele per un'analisi minimamente affidabile"),
   horizon: z.number().int().min(3).max(90).default(10),
+  language: LanguageSchema.default("it"),
 });
 
 export const generateForecastFromCandles = createServerFn({ method: "POST" })
@@ -268,7 +282,7 @@ export const generateForecastFromCandles = createServerFn({ method: "POST" })
   .inputValidator((raw: unknown) => ForecastFromCandlesInput.parse(raw))
   .handler(async ({ data }) => {
     const candles = [...data.candles].sort((a, b) => a.time - b.time);
-    const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon);
+    const forecast = await callForecast(data.symbol, data.interval, candles, data.horizon, data.language);
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
   });
 
@@ -411,6 +425,7 @@ const BacktestInput = z.object({
   interval: z.enum(["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1wk", "1mo"]).default("1d"),
   anchor_time: z.number(), // unix seconds
   horizon: z.number().int().min(3).max(60).default(10),
+  language: LanguageSchema.default("it"),
 });
 export const runBacktest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -422,7 +437,7 @@ export const runBacktest = createServerFn({ method: "POST" })
     const after = all.filter((c) => c.time > data.anchor_time).slice(0, data.horizon);
     if (before.length < 60) throw new Error("Serve più storico prima della data scelta");
     if (after.length < 3) throw new Error("Storico successivo insufficiente per la valutazione");
-    const forecast = await callForecast(data.symbol, data.interval, before, data.horizon);
+    const forecast = await callForecast(data.symbol, data.interval, before, data.horizon, data.language);
 
     const n = Math.min(forecast.candles.length, after.length);
     let sumPct = 0, maxErr = 0;

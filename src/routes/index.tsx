@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CandlestickChart, TrendingUp, Brain, History } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -12,44 +14,48 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen">
       <header className="mx-auto max-w-6xl px-4 py-5 flex items-center justify-between">
         <div className="flex items-center gap-2 font-semibold">
           <CandlestickChart className="h-5 w-5 text-primary" />
-          <span>Candlestick AI</span>
+          <span>{t("common.appName")}</span>
         </div>
-        <Link to="/auth" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">Entra</Link>
+        <div className="flex items-center gap-3">
+          <LanguageSwitcher />
+          <Link to="/auth" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.cta")}</Link>
+        </div>
       </header>
 
       <section className="mx-auto max-w-5xl px-4 pt-16 pb-24 text-center">
         <span className="inline-block rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground mb-6">
-          Analisi tecnica · Pattern · Previsione AI · Backtest
+          {t("landing.badge")}
         </span>
         <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
-          Leggi il grafico. <span className="text-primary">Prevedi la mossa.</span>
+          {t("landing.titleLine1")} <span className="text-primary">{t("landing.titleLine2")}</span>
         </h1>
         <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-          Grafici a candele, indicatori classici, riconoscimento di pattern candlestick e una AI che estende visivamente il grafico con la sua previsione. Poi confrontala con l'andamento reale.
+          {t("landing.subtitle")}
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <Link to="/auth" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90">Inizia gratis</Link>
-          <a href="#features" className="rounded-md border border-border px-5 py-3 text-sm hover:bg-accent">Come funziona</a>
+          <Link to="/auth" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.start")}</Link>
+          <a href="#features" className="rounded-md border border-border px-5 py-3 text-sm hover:bg-accent">{t("landing.howItWorks")}</a>
         </div>
       </section>
 
       <section id="features" className="mx-auto max-w-6xl px-4 pb-24 grid gap-4 sm:grid-cols-3">
-        <Feature icon={<TrendingUp />} title="Indicatori tecnici">RSI, MACD, medie mobili, Bollinger, stocastico — con segnali buy/sell/hold automatici.</Feature>
-        <Feature icon={<CandlestickChart />} title="Pattern candlestick">Doji, hammer, engulfing, morning/evening star, tre soldati bianchi e altri, rilevati sulle ultime candele.</Feature>
-        <Feature icon={<Brain />} title="Previsione AI grafica">Un modello AI prosegue il tuo grafico con N candele previste sovrapposte al reale.</Feature>
-        <Feature icon={<History />} title="Backtest storico">Scegli una data passata, genera la previsione di allora, confronta con quello che è successo.</Feature>
-        <Feature icon={<TrendingUp />} title="Watchlist personale">Salva i tuoi titoli e apri l'analisi con un click.</Feature>
-        <Feature icon={<Brain />} title="Accuratezza cumulativa">Ogni previsione salvata viene valutata ex-post: MAPE, direzione corretta, errore massimo.</Feature>
+        <Feature icon={<TrendingUp />} title={t("landing.feature1Title")}>{t("landing.feature1Desc")}</Feature>
+        <Feature icon={<CandlestickChart />} title={t("landing.feature2Title")}>{t("landing.feature2Desc")}</Feature>
+        <Feature icon={<Brain />} title={t("landing.feature3Title")}>{t("landing.feature3Desc")}</Feature>
+        <Feature icon={<History />} title={t("landing.feature4Title")}>{t("landing.feature4Desc")}</Feature>
+        <Feature icon={<TrendingUp />} title={t("landing.feature5Title")}>{t("landing.feature5Desc")}</Feature>
+        <Feature icon={<Brain />} title={t("landing.feature6Title")}>{t("landing.feature6Desc")}</Feature>
       </section>
 
       <footer className="border-t border-border/60">
         <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-muted-foreground text-center">
-          Strumento educativo. Non è consulenza finanziaria. Fonte dati: Yahoo Finance.
+          {t("landing.footer")}
         </div>
       </footer>
     </div>

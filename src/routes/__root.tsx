@@ -8,27 +8,30 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
+import "@/i18n/config";
 
 function NotFoundComponent() {
+  const { t } = useTranslation();
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Pagina non trovata</h2>
+        <h2 className="mt-4 text-xl font-semibold">{t("common.notFoundTitle")}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          La pagina che cercavi non esiste.
+          {t("common.notFoundDesc")}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
           >
-            Torna alla home
+            {t("common.backHome")}
           </Link>
         </div>
       </div>
@@ -39,19 +42,20 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
+  const { t } = useTranslation();
   useEffect(() => {
     reportError(error, { boundary: "root_error_component" });
   }, [error]);
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">Qualcosa è andato storto</h1>
+        <h1 className="text-xl font-semibold">{t("common.somethingWrong")}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
         <div className="mt-6 flex justify-center gap-2">
           <button
             onClick={() => { router.invalidate(); reset(); }}
             className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
-          >Riprova</button>
+          >{t("common.retry")}</button>
           <a href="/" className="rounded-md border border-border px-4 py-2 text-sm hover:bg-accent">Home</a>
         </div>
       </div>

@@ -1,0 +1,283 @@
+{
+  "common": {
+    "appName": "Candlestick AI",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "back": "Back",
+    "analyze": "Analyze",
+    "goTo": "Go",
+    "logout": "Log out",
+    "disclaimer": "Analyses and forecasts do not constitute financial advice.",
+    "error": "Error",
+    "confirm": "Confirm",
+    "notFoundTitle": "Page not found",
+    "notFoundDesc": "The page you were looking for doesn't exist.",
+    "backHome": "Back to home",
+    "somethingWrong": "Something went wrong",
+    "retry": "Retry"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "manual": "Manual entry",
+    "predictions": "Predictions"
+  },
+  "landing": {
+    "cta": "Sign in",
+    "badge": "Technical analysis · Patterns · AI forecast · Backtest",
+    "titleLine1": "Read the chart.",
+    "titleLine2": "Predict the move.",
+    "subtitle": "Candlestick charts, classic indicators, candlestick pattern recognition, and an AI that visually extends the chart with its forecast. Then compare it with what actually happened.",
+    "start": "Start for free",
+    "howItWorks": "How it works",
+    "feature1Title": "Technical indicators",
+    "feature1Desc": "RSI, MACD, moving averages, Bollinger, stochastic — with automatic buy/sell/hold signals.",
+    "feature2Title": "Candlestick patterns",
+    "feature2Desc": "Doji, hammer, engulfing, morning/evening star, three white soldiers and more, detected on recent candles.",
+    "feature3Title": "Visual AI forecast",
+    "feature3Desc": "An AI model extends your chart with N forecast candles overlaid on the real data.",
+    "feature4Title": "Historical backtest",
+    "feature4Desc": "Pick a past date, generate the forecast as of that day, compare it with what actually happened.",
+    "feature5Title": "Personal watchlist",
+    "feature5Desc": "Save your symbols and open the analysis with one click.",
+    "feature6Title": "Cumulative accuracy",
+    "feature6Desc": "Every saved prediction is evaluated after the fact: MAPE, correct direction, max error.",
+    "footer": "Educational tool. Not financial advice. Data source: Twelve Data."
+  },
+  "auth": {
+    "login": "Log in",
+    "signup": "Sign up",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "email": "Email",
+    "password": "Password",
+    "passwordHint": "min 8 characters",
+    "createAccount": "Create account",
+    "accountCreated": "Account created! You're in.",
+    "authError": "Authentication error",
+    "googleFailed": "Google sign-in failed",
+    "footer": "No financial advice. Educational tools only."
+  },
+  "dashboard": {
+    "greeting": "Hi 👋",
+    "subtitle": "Search a symbol, open it, and ask the AI for a forecast.",
+    "searchLabel": "Search symbol (ticker or name)",
+    "searchPlaceholder": "AAPL, Tesla, ENI.MI ...",
+    "searching": "Searching...",
+    "noResults": "No results",
+    "watchlistTitle": "Your watchlist",
+    "watchlistEmpty": "Still empty. Search a symbol above and save it.",
+    "openAnalysis": "Open analysis",
+    "latestPredictions": "Latest predictions",
+    "seeAll": "See all",
+    "noPredictions": "No predictions saved yet.",
+    "candles": "candles",
+    "addedToWatchlist": "Added to watchlist"
+  },
+  "analyze": {
+    "candleDuration": "Candle duration",
+    "historicalPeriod": "Historical period",
+    "insufficientData": "History too short for analysis.",
+    "indicators": "Indicators",
+    "overallSignal": "Overall signal",
+    "trend": "EMA9/21 trend",
+    "bollinger": "Bollinger",
+    "stochastic": "Stochastic %K",
+    "patternsDetected": "Candlestick patterns detected",
+    "noPatterns": "No relevant patterns in recent candles.",
+    "aiForecast": "AI Forecast",
+    "horizon": "Horizon:",
+    "generateForecast": "Generate forecast",
+    "generating": "Generating…",
+    "forecastHint": "Click \"Generate forecast\" to extend the chart with {{horizon}} AI-predicted candles.",
+    "confidence": "AI confidence:",
+    "bandHint": "The dashed band on the chart shows a plausible range (±1 historical standard deviation), not another AI-predicted scenario.",
+    "directionalProbability": "Directional probability over {{horizon}} candles",
+    "forecastFailed": "Forecast failed",
+    "predictionSaved": "Prediction saved",
+    "backtest": "Backtest"
+  },
+  "directional": {
+    "up": "Up",
+    "down": "Down",
+    "sideways": "Sideways"
+  },
+  "manual": {
+    "title": "Manual entry",
+    "subtitle": "Look at the chart you're interested in (screenshot, TradingView, etc.) and type in the OHLC values here. No data is estimated by the AI: the numbers are exactly what you enter.",
+    "symbolLabel": "Symbol / name (free text, doesn't need to exist on Yahoo)",
+    "symbolPlaceholder": "e.g. BTC/USD, my stock, etc.",
+    "candleDuration": "Duration of each candle",
+    "candlesCount": "Candles ({{valid}} valid of {{total}})",
+    "pasteMultiple": "Paste multiple rows",
+    "addCandle": "Add candle",
+    "pasteHint": "One candle per line, values separated by comma or tab:",
+    "addRows": "Add rows",
+    "rowsAdded": "{{count}} candles added",
+    "colDate": "Date/time",
+    "colOpen": "Open",
+    "colHigh": "High",
+    "colLow": "Low",
+    "colClose": "Close",
+    "colVolume": "Volume",
+    "needMoreCandles": "You need at least 15 valid candles to generate an AI forecast (you have {{count}}). You can still see indicators and patterns with what you've entered.",
+    "photoSectionTitle": "Extract from a photo (estimate, review before use)",
+    "loadPhoto": "Load photo",
+    "close": "Close",
+    "photoHint": "Upload a photo of the chart, specify how many candles are visible, and enter the real OHLC values of at least one candle (ideally two, e.g. the first and last) to calibrate the price scale. The AI estimates the other candles — these are approximate numbers, review them before proceeding.",
+    "changePhoto": "Change photo",
+    "choosePhoto": "Choose or take a photo",
+    "visibleCandlesQuestion": "How many candles are visible in the chart?",
+    "calibrationCandles": "Calibration candles (known real values)",
+    "add": "Add",
+    "colPosition": "Position (from left, 1 = first)",
+    "extractButton": "Estimate candles from photo",
+    "extracting": "Analyzing the photo…",
+    "extractReplaceHint": "This will replace the current rows in the table below with the estimated candles.",
+    "extractSuccess": "{{count}} candles estimated from the photo — review them before proceeding",
+    "extractNotesTitle": "AI notes on the estimate:",
+    "extractFailed": "Extraction failed",
+    "extractMissingPhoto": "Upload a chart photo first",
+    "extractMissingTotal": "Specify how many candles are visible in the chart",
+    "extractMissingCalibration": "At least one filled-in calibration candle is required",
+    "smaEma": "SMA/EMA",
+    "aiForecastTitle": "AI Forecast",
+    "aiForecastGeneric": "Click \"Generate forecast\" to extend the chart with {{horizon}} AI-predicted candles, calculated from the data you entered.",
+    "genPredictionFirst": "Generate a prediction first",
+    "indicatorsTitle": "Indicators",
+    "indicatorsHint": "Indicators that need more history than what you entered (e.g. SMA200 with few candles) show \"—\".",
+    "patternsTitle": "Candlestick patterns detected",
+    "noPatterns": "No relevant patterns in the entered candles.",
+    "rowError": "Row {{n}}: {{reason}}",
+    "rowErrorMissing": "missing or non-numeric values",
+    "rowErrorInconsistent": "high/low inconsistent with open/close",
+    "pasteHintSuffix": "(volume optional). Dates are generated automatically in sequence based on the duration chosen above."
+  },
+  "backtest": {
+    "title": "Backtest",
+    "subtitle": "Pick a historical date, generate the forecast as if it were that day, and compare it with what really happened.",
+    "date": "Date",
+    "candleDuration": "Candle duration",
+    "horizon": "Horizon (candles)",
+    "run": "Run backtest",
+    "running": "Running…",
+    "needMoreHistory": "Need more history before the chosen date",
+    "needMoreFuture": "Not enough subsequent history to evaluate",
+    "legendHistory": "Real history (candles)",
+    "legendPrediction": "AI forecast",
+    "legendActual": "Real closing price after anchor",
+    "probabilityBeforeOutcome": "Directional probability estimated by the AI (before knowing the outcome)",
+    "realOutcome": "Real outcome:",
+    "directionCorrect": "direction correct",
+    "directionWrong": "direction wrong",
+    "mape": "Mean error (MAPE)",
+    "maxError": "Max error",
+    "backToAnalysis": "Back to analysis",
+    "pageSubtitle": "Pick a past date. The AI will generate the forecast using only data up to that date, and we'll compare it with what actually happened afterwards.",
+    "anchorDate": "Anchor date",
+    "mapeHint": "Average % error on closes",
+    "correct": "Correct",
+    "wrong": "Wrong"
+  },
+  "predictions": {
+    "title": "Saved predictions",
+    "subtitle": "Each prediction can be evaluated after the fact by comparing the predicted candles with the actual ones that followed.",
+    "statsTitle": "Historical reliability (based on evaluated backtests)",
+    "statsEmpty": "No predictions evaluated yet — use \"Evaluate\" below or try a backtest to start building a real track record, instead of trusting it blindly.",
+    "evaluated": "Evaluated predictions",
+    "directionAccuracy": "Direction correct",
+    "avgMape": "Mean error (MAPE)",
+    "coinFlipHint": "50% direction accuracy is equivalent to a coin flip — it's the minimum baseline to tell whether the AI is doing anything useful on this kind of data.",
+    "empty": "No predictions saved. Go to a symbol and click \"Save\".",
+    "evaluate": "Evaluate",
+    "evaluated_toast": "Evaluated",
+    "evaluationError": "Evaluation error",
+    "pendingHistory": "Subsequent history not yet available.",
+    "direction": "Direction"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "units": {
+    "1m": "1 minute",
+    "5m": "5 minutes",
+    "15m": "15 minutes",
+    "30m": "30 minutes",
+    "1h": "1 hour",
+    "4h": "4 hours",
+    "1d": "1 day",
+    "1wk": "1 week",
+    "1mo": "1 month",
+    "5d": "5 days",
+    "3mo": "3 months",
+    "6mo": "6 months",
+    "1y": "1 year",
+    "2y": "2 years",
+    "5y": "5 years",
+    "10y": "10 years",
+    "max": "Maximum available"
+  },
+  "patterns": {
+    "doji": {
+      "name": "Doji",
+      "description": "Indecision: open ≈ close."
+    },
+    "hammer": {
+      "name": "Hammer",
+      "description": "Long lower shadow after a downtrend: possible bullish reversal."
+    },
+    "hanging_man": {
+      "name": "Hanging Man",
+      "description": "Small body at the top after an uptrend: possible bearish reversal."
+    },
+    "shooting_star": {
+      "name": "Shooting Star",
+      "description": "Rejection at the highs after an uptrend: possible bearish reversal."
+    },
+    "inverted_hammer": {
+      "name": "Inverted Hammer",
+      "description": "Possible bullish reversal, confirm with the next candle."
+    },
+    "marubozu_white": {
+      "name": "White Marubozu",
+      "description": "Full body with no shadows: strong directional pressure."
+    },
+    "marubozu_black": {
+      "name": "Black Marubozu",
+      "description": "Full body with no shadows: strong directional pressure."
+    },
+    "bullish_engulfing": {
+      "name": "Bullish Engulfing",
+      "description": "Green candle engulfs the previous red one."
+    },
+    "bearish_engulfing": {
+      "name": "Bearish Engulfing",
+      "description": "Red candle engulfs the previous green one."
+    },
+    "bearish_harami": {
+      "name": "Bearish Harami",
+      "description": "Small bearish body inside the previous bullish body."
+    },
+    "bullish_harami": {
+      "name": "Bullish Harami",
+      "description": "Small bullish body inside the previous bearish body."
+    },
+    "morning_star": {
+      "name": "Morning Star",
+      "description": "Three-candle bullish reversal formation."
+    },
+    "evening_star": {
+      "name": "Evening Star",
+      "description": "Three-candle bearish reversal formation."
+    },
+    "three_white_soldiers": {
+      "name": "Three White Soldiers",
+      "description": "Three consecutive green candles with rising closes."
+    },
+    "three_black_crows": {
+      "name": "Three Black Crows",
+      "description": "Three consecutive red candles with falling closes."
+    }
+  }
+}
