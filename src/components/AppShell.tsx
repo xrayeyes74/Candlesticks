@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { CandlestickChart, LineChart, LayoutDashboard, History, LogOut, ImagePlus, Menu, X } from "lucide-react";
+import { CandlestickChart, LayoutDashboard, History, LogOut, ImagePlus, Menu, X } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,9 +66,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         )}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
-      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-muted-foreground">
-        <LineChart className="inline h-3 w-3 mr-1" />
-        {t("common.disclaimer")}
+      <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-400/90">
+        {t("common.legalBanner")}
       </footer>
     </div>
   );

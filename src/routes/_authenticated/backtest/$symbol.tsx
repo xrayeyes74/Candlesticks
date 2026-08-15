@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { runBacktest } from "@/lib/forecast.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
+import { LegalBanner } from "@/components/LegalBanner";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -64,6 +65,8 @@ function BacktestPage() {
 
       {mut.data && (
         <>
+          <LegalBanner />
+
           <div className="grid gap-3 grid-cols-3">
             <Metric label="MAPE" value={`${mut.data.metrics.mape.toFixed(2)}%`} hint={t("backtest.mapeHint")} />
             <Metric label={t("backtest.maxError")} value={`${mut.data.metrics.max_error.toFixed(2)}%`} />

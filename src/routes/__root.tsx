@@ -15,6 +15,7 @@ import { reportError } from "../lib/error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import "@/i18n/config";
+import { LegalGate } from "@/components/LegalGate";
 
 function NotFoundComponent() {
   const { t } = useTranslation();
@@ -113,6 +114,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <LegalGate />
       <Outlet />
       <Toaster theme="dark" position="top-right" richColors />
     </QueryClientProvider>

@@ -16,7 +16,11 @@
     "notFoundDesc": "La page que vous cherchiez n'existe pas.",
     "backHome": "Retour à l'accueil",
     "somethingWrong": "Une erreur est survenue",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "legalTitle": "Avis important",
+    "legalBody": "À DES FINS ÉDUCATIVES UNIQUEMENT — CECI NE CONSTITUE PAS UN CONSEIL FINANCIER. LES PRÉVISIONS SONT DES ESTIMATIONS GÉNÉRÉES PAR L'IA ET PEUVENT ÊTRE ERRONÉES. N'UTILISEZ PAS CETTE APPLICATION POUR DES DÉCISIONS DE TRADING OU D'INVESTISSEMENT RÉELLES. L'UTILISATEUR ASSUME L'ENTIÈRE ET EXCLUSIVE RESPONSABILITÉ DE TOUTE UTILISATION DES INFORMATIONS FOURNIES.",
+    "legalAccept": "J'ai lu et j'accepte",
+    "legalBanner": "À DES FINS ÉDUCATIVES UNIQUEMENT — PAS UN CONSEIL FINANCIER. NE PAS UTILISER POUR DU TRADING RÉEL."
   },
   "nav": {
     "dashboard": "Tableau de bord",

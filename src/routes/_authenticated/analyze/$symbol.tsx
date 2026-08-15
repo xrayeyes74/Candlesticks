@@ -5,6 +5,7 @@ import { analyzeSymbol } from "@/lib/market.functions";
 import { generateForecast, savePrediction, addWatchlist } from "@/lib/forecast.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
+import { LegalBanner } from "@/components/LegalBanner";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -141,6 +142,8 @@ function AnalyzePage() {
             pessimistic={fcMut.data?.pessimistic}
             overlays={overlays}
           />
+
+          <LegalBanner />
 
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-3">

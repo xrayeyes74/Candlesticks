@@ -12,6 +12,7 @@ import { generateForecastFromCandles, savePrediction } from "@/lib/forecast.func
 import { extractCandlesFromImage } from "@/lib/vision.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
+import { LegalBanner } from "@/components/LegalBanner";
 
 export const Route = createFileRoute("/_authenticated/manual")({
   component: ManualEntryPage,
@@ -491,6 +492,8 @@ function ManualEntryPage() {
           </div>
 
           <CandlestickChartView candles={candles} predicted={fcMut.data?.candles} optimistic={fcMut.data?.optimistic} pessimistic={fcMut.data?.pessimistic} overlays={overlays} />
+
+          <LegalBanner />
 
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-3">

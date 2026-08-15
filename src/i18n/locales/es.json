@@ -16,7 +16,11 @@
     "notFoundDesc": "La página que buscabas no existe.",
     "backHome": "Volver al inicio",
     "somethingWrong": "Algo salió mal",
-    "retry": "Reintentar"
+    "retry": "Reintentar",
+    "legalTitle": "Aviso importante",
+    "legalBody": "SOLO CON FINES EDUCATIVOS — ESTO NO CONSTITUYE ASESORAMIENTO FINANCIERO. LAS PREDICCIONES SON ESTIMACIONES GENERADAS POR IA Y PUEDEN SER INCORRECTAS. NO UTILICE ESTA APP PARA DECISIONES REALES DE TRADING O INVERSIÓN. EL USUARIO ASUME LA RESPONSABILIDAD TOTAL Y EXCLUSIVA POR CUALQUIER USO DE LA INFORMACIÓN PROPORCIONADA.",
+    "legalAccept": "He leído y acepto",
+    "legalBanner": "SOLO CON FINES EDUCATIVOS — NO ES ASESORAMIENTO FINANCIERO. NO USAR PARA TRADING REAL."
   },
   "nav": {
     "dashboard": "Panel",

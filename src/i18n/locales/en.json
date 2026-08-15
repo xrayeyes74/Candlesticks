@@ -16,7 +16,11 @@
     "notFoundDesc": "The page you were looking for doesn't exist.",
     "backHome": "Back to home",
     "somethingWrong": "Something went wrong",
-    "retry": "Retry"
+    "retry": "Retry",
+    "legalTitle": "Important notice",
+    "legalBody": "FOR EDUCATIONAL PURPOSES ONLY — THIS DOES NOT CONSTITUTE FINANCIAL ADVICE. FORECASTS ARE AI-GENERATED ESTIMATES AND MAY BE WRONG. DO NOT USE THIS APP FOR REAL TRADING OR INVESTMENT DECISIONS. THE USER ASSUMES FULL AND EXCLUSIVE RESPONSIBILITY FOR ANY USE OF THE INFORMATION PROVIDED.",
+    "legalAccept": "I have read and accept",
+    "legalBanner": "FOR EDUCATIONAL PURPOSES ONLY — NOT FINANCIAL ADVICE. DO NOT USE FOR REAL TRADING."
   },
   "nav": {
     "dashboard": "Dashboard",
