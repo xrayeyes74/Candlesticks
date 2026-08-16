@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
         )}
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+      <main className="mx-auto max-w-7xl px-4 py-6 pb-20">{children}</main>
       <footer className="mx-auto max-w-7xl px-4 py-6 text-center text-xs font-semibold uppercase tracking-wide text-yellow-700 dark:text-yellow-400/90">
         {t("common.legalBanner")}
       </footer>

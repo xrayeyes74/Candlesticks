@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import "@/i18n/config";
 import { LegalGate } from "@/components/LegalGate";
+import { initAds } from "@/lib/ads";
 
 function NotFoundComponent() {
   const { t } = useTranslation();
@@ -111,6 +112,10 @@ function RootComponent() {
     });
     return () => sub.subscription.unsubscribe();
   }, [router, queryClient]);
+
+  useEffect(() => {
+    initAds();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
