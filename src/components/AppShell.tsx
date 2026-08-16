@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
-import { CandlestickChart, LayoutDashboard, History, LogOut, ImagePlus, Menu, X } from "lucide-react";
+import { CandlestickChart, LayoutDashboard, History, LogOut, ImagePlus, Menu, X, UserCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -37,6 +37,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />}>{t("nav.dashboard")}</NavLink>
             <NavLink to="/manual" icon={<ImagePlus className="h-4 w-4" />}>{t("nav.manual")}</NavLink>
             <NavLink to="/predictions" icon={<History className="h-4 w-4" />}>{t("nav.predictions")}</NavLink>
+            <NavLink to="/account" icon={<UserCircle className="h-4 w-4" />}>{t("nav.account")}</NavLink>
           </nav>
           <div className="flex items-center gap-3">
             <LanguageSwitcher className="hidden sm:inline-flex" />
@@ -58,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>{t("nav.dashboard")}</NavLink>
             <NavLink to="/manual" icon={<ImagePlus className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>{t("nav.manual")}</NavLink>
             <NavLink to="/predictions" icon={<History className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>{t("nav.predictions")}</NavLink>
+            <NavLink to="/account" icon={<UserCircle className="h-4 w-4" />} onClick={() => setMobileMenuOpen(false)}>{t("nav.account")}</NavLink>
             <div className="px-3 py-2"><LanguageSwitcher /></div>
             <button onClick={signOut} className="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-left hover:bg-accent">
               <LogOut className="h-3.5 w-3.5" /> {t("common.logout")}

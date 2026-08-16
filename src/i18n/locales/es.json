@@ -25,7 +25,8 @@
   "nav": {
     "dashboard": "Panel",
     "manual": "Entrada manual",
-    "predictions": "Predicciones"
+    "predictions": "Predicciones",
+    "account": "Cuenta"
   },
   "landing": {
     "cta": "Entrar",
@@ -178,7 +179,7 @@
     "mape": "Error medio (MAPE)",
     "maxError": "Error máximo",
     "backToAnalysis": "Volver al análisis",
-    "pageSubtitle": "Elige una fecha pasada. La IA generará la predicción usando solo los datos hasta esa fecha, y la compararemos con lo que realmente sucedió después.",
+    "pageSubtitle": "Elige una fecha histórica, genera la predicción como si fuera ese día y compárala con lo que realmente sucedió.",
     "anchorDate": "Fecha de anclaje",
     "mapeHint": "Error % medio en los cierres",
     "correct": "Correcta",
@@ -283,5 +284,14 @@
       "name": "Tres cuervos negros",
       "description": "Tres velas rojas consecutivas con cierres decrecientes."
     }
+  },
+  "account": {
+    "title": "Tu cuenta",
+    "dangerZone": "Zona de peligro",
+    "deleteWarning": "Elimina permanentemente tu cuenta y todos los datos asociados (watchlist, predicciones guardadas, historial). Esta acción no se puede deshacer.",
+    "deleteButton": "Eliminar cuenta",
+    "confirmPrompt": "Para confirmar, escribe tu email ({{email}}) abajo:",
+    "deletePermanently": "Eliminar permanentemente",
+    "deleted": "Cuenta eliminada"
   }
 }

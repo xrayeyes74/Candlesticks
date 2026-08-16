@@ -25,7 +25,8 @@
   "nav": {
     "dashboard": "Dashboard",
     "manual": "Inserimento manuale",
-    "predictions": "Previsioni"
+    "predictions": "Previsioni",
+    "account": "Account"
   },
   "landing": {
     "cta": "Entra",
@@ -283,5 +284,14 @@
       "name": "Three Black Crows",
       "description": "Tre candele rosse consecutive con chiusure decrescenti."
     }
+  },
+  "account": {
+    "title": "Il tuo account",
+    "dangerZone": "Zona pericolosa",
+    "deleteWarning": "Elimina definitivamente il tuo account e tutti i dati associati (watchlist, previsioni salvate, cronologia). Questa azione non può essere annullata.",
+    "deleteButton": "Elimina account",
+    "confirmPrompt": "Per confermare, scrivi la tua email ({{email}}) qui sotto:",
+    "deletePermanently": "Elimina definitivamente",
+    "deleted": "Account eliminato"
   }
 }

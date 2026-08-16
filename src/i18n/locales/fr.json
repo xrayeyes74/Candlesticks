@@ -25,7 +25,8 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "manual": "Saisie manuelle",
-    "predictions": "Prévisions"
+    "predictions": "Prévisions",
+    "account": "Compte"
   },
   "landing": {
     "cta": "Se connecter",
@@ -178,7 +179,7 @@
     "mape": "Erreur moyenne (MAPE)",
     "maxError": "Erreur maximale",
     "backToAnalysis": "Retour à l'analyse",
-    "pageSubtitle": "Choisissez une date passée. L'IA générera la prévision en utilisant uniquement les données jusqu'à cette date, et nous la comparerons avec ce qui s'est réellement passé ensuite.",
+    "pageSubtitle": "Choisissez une date historique, générez la prévision comme si c'était ce jour-là, et comparez-la avec ce qui s'est réellement passé.",
     "anchorDate": "Date d'ancrage",
     "mapeHint": "Erreur % moyenne sur les clôtures",
     "correct": "Correcte",
@@ -283,5 +284,14 @@
       "name": "Trois corbeaux noirs",
       "description": "Trois bougies rouges consécutives avec des clôtures décroissantes."
     }
+  },
+  "account": {
+    "title": "Votre compte",
+    "dangerZone": "Zone dangereuse",
+    "deleteWarning": "Supprimez définitivement votre compte et toutes les données associées (liste de suivi, prévisions enregistrées, historique). Cette action est irréversible.",
+    "deleteButton": "Supprimer le compte",
+    "confirmPrompt": "Pour confirmer, saisissez votre email ({{email}}) ci-dessous :",
+    "deletePermanently": "Supprimer définitivement",
+    "deleted": "Compte supprimé"
   }
 }
