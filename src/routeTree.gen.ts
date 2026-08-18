@@ -11,13 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ChartRouteImport } from './routes/chart'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedPredictionsRouteImport } from './routes/_authenticated/predictions'
 import { Route as AuthenticatedManualRouteImport } from './routes/_authenticated/manual'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
 import { Route as AuthenticatedBacktestSymbolRouteImport } from './routes/_authenticated/backtest/$symbol'
 import { Route as AuthenticatedAnalyzeSymbolRouteImport } from './routes/_authenticated/analyze/$symbol'
 
@@ -29,11 +27,6 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const ChartRoute = ChartRouteImport.update({
   id: '/chart',
   path: '/chart',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -61,11 +54,6 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
-  id: '/account',
-  path: '/account',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedBacktestSymbolRoute =
   AuthenticatedBacktestSymbolRouteImport.update({
     id: '/backtest/$symbol',
@@ -81,10 +69,8 @@ const AuthenticatedAnalyzeSymbolRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/chart': typeof ChartRoute
   '/privacy': typeof PrivacyRoute
-  '/account': typeof AuthenticatedAccountRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manual': typeof AuthenticatedManualRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
@@ -93,10 +79,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/chart': typeof ChartRoute
   '/privacy': typeof PrivacyRoute
-  '/account': typeof AuthenticatedAccountRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/manual': typeof AuthenticatedManualRoute
   '/predictions': typeof AuthenticatedPredictionsRoute
@@ -107,10 +91,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
   '/chart': typeof ChartRoute
   '/privacy': typeof PrivacyRoute
-  '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/manual': typeof AuthenticatedManualRoute
   '/_authenticated/predictions': typeof AuthenticatedPredictionsRoute
@@ -121,10 +103,8 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/chart'
     | '/privacy'
-    | '/account'
     | '/dashboard'
     | '/manual'
     | '/predictions'
@@ -133,10 +113,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/chart'
     | '/privacy'
-    | '/account'
     | '/dashboard'
     | '/manual'
     | '/predictions'
@@ -146,10 +124,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/auth'
     | '/chart'
     | '/privacy'
-    | '/_authenticated/account'
     | '/_authenticated/dashboard'
     | '/_authenticated/manual'
     | '/_authenticated/predictions'
@@ -160,7 +136,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
   ChartRoute: typeof ChartRoute
   PrivacyRoute: typeof PrivacyRoute
 }
@@ -179,13 +154,6 @@ declare module '@tanstack/react-router' {
       path: '/chart'
       fullPath: '/chart'
       preLoaderRoute: typeof ChartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -223,13 +191,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/account': {
-      id: '/_authenticated/account'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof AuthenticatedAccountRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/backtest/$symbol': {
       id: '/_authenticated/backtest/$symbol'
       path: '/backtest/$symbol'
@@ -248,7 +209,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAccountRoute: typeof AuthenticatedAccountRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedManualRoute: typeof AuthenticatedManualRoute
   AuthenticatedPredictionsRoute: typeof AuthenticatedPredictionsRoute
@@ -257,7 +217,6 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAccountRoute: AuthenticatedAccountRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedManualRoute: AuthenticatedManualRoute,
   AuthenticatedPredictionsRoute: AuthenticatedPredictionsRoute,
@@ -271,20 +230,9 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
   ChartRoute: ChartRoute,
   PrivacyRoute: PrivacyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

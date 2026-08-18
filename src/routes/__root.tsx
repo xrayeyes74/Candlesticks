@@ -12,7 +12,6 @@ import { useTranslation } from "react-i18next";
 
 import appCss from "../styles.css?url";
 import { reportError } from "../lib/error-reporting";
-import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import "@/i18n/config";
 import { LegalGate } from "@/components/LegalGate";
@@ -70,22 +69,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Candlestick AI — Analisi tecnica e previsioni AI di titoli" },
-      { name: "description", content: "Leggi grafici a candele, indicatori tecnici e pattern candlestick. Genera previsioni AI e confrontale con l'andamento reale." },
-      { property: "og:title", content: "Candlestick AI" },
-      { property: "og:description", content: "Analisi tecnica e previsioni AI su titoli di borsa, con backtest storico." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: "Candlestick AI" },
     ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
+  shellComponent: RootShell,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
@@ -102,16 +93,6 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const router = useRouter();
-
-  useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
-    });
-    return () => sub.subscription.unsubscribe();
-  }, [router, queryClient]);
 
   useEffect(() => {
     initAds();

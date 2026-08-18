@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { analyzeSymbol } from "@/lib/market.functions";
-import { generateForecast, savePrediction, addWatchlist } from "@/lib/forecast.functions";
+import { generateForecast } from "@/lib/forecast.functions";
+import { addToWatchlist, savePredictionLocal } from "@/lib/local-storage";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
 import { LegalBanner } from "@/components/LegalBanner";
@@ -36,8 +37,6 @@ function AnalyzePage() {
 
   const analyze = useServerFn(analyzeSymbol);
   const forecast = useServerFn(generateForecast);
-  const save = useServerFn(savePrediction);
-  const addWl = useServerFn(addWatchlist);
   const qc = useQueryClient();
 
   const data = useQuery({
@@ -51,20 +50,18 @@ function AnalyzePage() {
   });
 
   const saveMut = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!fcMut.data || !data.data) throw new Error(t("manual.genPredictionFirst"));
-      return save({
-        data: {
-          symbol, interval,
-          anchor_time: fcMut.data.anchor.time,
-          horizon_candles: horizon,
-          predicted_candles: fcMut.data.candles,
-          indicators_snapshot: data.data.analysis.indicators,
-          patterns_snapshot: data.data.analysis.patterns,
-          rationale: fcMut.data.rationale,
-          confidence: fcMut.data.confidence,
-          model: fcMut.data.model,
-        },
+      return savePredictionLocal({
+        symbol, interval,
+        anchor_time: fcMut.data.anchor.time,
+        horizon_candles: horizon,
+        predicted_candles: fcMut.data.candles,
+        indicators_snapshot: data.data.analysis.indicators,
+        patterns_snapshot: data.data.analysis.patterns,
+        rationale: fcMut.data.rationale,
+        confidence: fcMut.data.confidence,
+        model: fcMut.data.model,
       });
     },
     onSuccess: () => { toast.success(t("analyze.predictionSaved")); qc.invalidateQueries({ queryKey: ["predictions"] }); },
@@ -107,7 +104,7 @@ function AnalyzePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => addWl({ data: { symbol } }).then(() => toast.success(t("dashboard.addedToWatchlist"))).catch((e) => toast.error(e.message))} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><Star className="h-3.5 w-3.5" /> Watchlist</button>
+          <button onClick={() => { addToWatchlist(symbol); toast.success(t("dashboard.addedToWatchlist")); }} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><Star className="h-3.5 w-3.5" /> Watchlist</button>
           <Link to="/backtest/$symbol" params={{ symbol }} className="inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-xs hover:bg-accent"><History className="h-3.5 w-3.5" /> {t("analyze.backtest")}</Link>
         </div>
       </div>

@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output, NoObjectGeneratedError } from "ai";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createAiProvider } from "./ai-gateway.server";
 import { fetchHistory } from "./market-data.server";
 import { summarize } from "./ta/indicators";
@@ -11,7 +10,7 @@ import type { Candle } from "./ta/types";
 // Defaults target Groq's free OpenAI-compatible tier (no credit card required) so the
 // app works out of the box at zero cost. Override via env vars to point at OpenAI,
 // Anthropic through a compatible proxy, OpenRouter, Cerebras, etc.
-const MODEL = process.env.AI_MODEL || "llama-3.3-70b-versatile";
+const MODEL = process.env.AI_MODEL || "openai/gpt-oss-120b";
 const AI_BASE_URL = process.env.AI_BASE_URL || "https://api.groq.com/openai/v1";
 
 const CandleSchema = z.object({
@@ -96,9 +95,18 @@ async function callForecast(
       return await callForecastOnce(symbol, interval, candles, horizon, language);
     } catch (error) {
       lastError = error;
-      // The model occasionally emits malformed JSON — this is intermittent, not
-      // deterministic, so a short retry resolves it most of the time without
-      // bothering the user.
+      // If the free-tier per-minute token budget is exhausted, retrying immediately
+      // just hits the same wall again — fail fast with a clear message instead of
+      // burning all 3 attempts uselessly (and making the UI look "stuck").
+      const msg = error instanceof Error ? error.message.toLowerCase() : "";
+      if (msg.includes("rate limit") || msg.includes("429") || msg.includes("too many requests")) {
+        throw new Error(
+          "Limite di richieste del modello AI raggiunto (piano gratuito). Aspetta circa un minuto e riprova." +
+            (error instanceof Error ? ` (${error.message})` : ""),
+        );
+      }
+      // Otherwise the model occasionally emits malformed JSON — this is intermittent,
+      // not deterministic, so a short retry resolves it most of the time.
     }
   }
   throw new Error(
@@ -119,7 +127,7 @@ async function callForecastOnce(
   const gateway = createAiProvider(apiKey, { baseURL: AI_BASE_URL, structuredOutputs: false });
   const model = gateway(MODEL);
 
-  const tail = candles.slice(-120);
+  const tail = candles.slice(-80); // shorter window = fewer input tokens (free-tier TPM budgets are tight)
   const indicators = summarize(candles);
   const patterns = detectPatterns(candles).slice(-8);
   const last = candles[candles.length - 1];
@@ -144,7 +152,7 @@ Rispetta queste regole:
 - "rationale": 3-5 frasi che spiegano il ragionamento dietro le probabilità direzionali, basato sull'analisi tecnica. IMPORTANTE: scrivi il testo di "rationale" interamente in ${languageName}, indipendentemente dalla lingua di questo prompt. I nomi dei campi JSON restano invariati (in inglese).
 - "confidence": numero tra 0 e 1, quanto sei sicuro della tua analisi (non della direzione dei prezzi in sé).
 
-Ultime 120 candele (time,open,high,low,close):
+Ultime 80 candele (time,open,high,low,close):
 ${tail.map((c) => `${c.time},${c.open.toFixed(2)},${c.high.toFixed(2)},${c.low.toFixed(2)},${c.close.toFixed(2)}`).join("\n")}`;
 
   try {
@@ -216,9 +224,6 @@ function normalize(
   });
   const confidence = Math.max(0, Math.min(1, raw.confidence ?? 0.5));
 
-  // Confidence band: ±1 std-dev of historical returns, widening with sqrt(horizon)
-  // as in a random-walk model — computed statistically, not by the AI, so it stays
-  // reliable regardless of how the model's own JSON generation behaves that day.
   const optimistic = outCandles.map((c, i) => ({
     time: c.time,
     value: c.close * (1 + vol * Math.sqrt(i + 1)),
@@ -244,7 +249,7 @@ function normalize(
   };
 }
 
-// ---- Server functions ----
+// ---- Server functions (no auth — nothing here is tied to a user account) ----
 
 const LanguageSchema = z.enum(["it", "en", "fr", "es"]).catch("it");
 
@@ -257,7 +262,6 @@ const ForecastInput = z.object({
 });
 
 export const generateForecast = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => ForecastInput.parse(raw))
   .handler(async ({ data }) => {
     const candles = await fetchHistory(data.symbol, data.interval, data.range);
@@ -267,7 +271,7 @@ export const generateForecast = createServerFn({ method: "POST" })
   });
 
 // Same as generateForecast, but for candles the user typed in by hand (e.g. reading
-// them off a chart image) instead of fetching from Yahoo. No network call to Yahoo here.
+// them off a chart image) instead of fetching from a market data API.
 const ManualCandleSchema = CandleSchema.extend({ volume: z.number().min(0).default(0) });
 const ForecastFromCandlesInput = z.object({
   symbol: z.string().min(1).max(40).transform((s) => s.trim().toUpperCase()),
@@ -278,7 +282,6 @@ const ForecastFromCandlesInput = z.object({
 });
 
 export const generateForecastFromCandles = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => ForecastFromCandlesInput.parse(raw))
   .handler(async ({ data }) => {
     const candles = [...data.candles].sort((a, b) => a.time - b.time);
@@ -286,137 +289,23 @@ export const generateForecastFromCandles = createServerFn({ method: "POST" })
     return { ...forecast, anchor: candles[candles.length - 1], model: MODEL };
   });
 
-// Save prediction
-const SavePredictionInput = z.object({
-  symbol: z.string(),
+// Fetches the real candles after a prediction's anchor time, so the client can
+// compare them against the predicted path and store the evaluation locally.
+// This needs to stay server-side because it uses the Twelve Data API key.
+const ActualCandlesInput = z.object({
+  symbol: z.string().min(1).max(40).transform((s) => s.trim().toUpperCase()),
   interval: z.string(),
   anchor_time: z.number(),
   horizon_candles: z.number().int(),
-  predicted_candles: z.array(CandleSchema.extend({ volume: z.number().default(0) })),
-  indicators_snapshot: z.any().optional(),
-  patterns_snapshot: z.any().optional(),
-  rationale: z.string().optional(),
-  confidence: z.number().optional(),
-  model: z.string().optional(),
 });
-
-export const savePrediction = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => SavePredictionInput.parse(raw))
-  .handler(async ({ data, context }) => {
-    const { data: row, error } = await context.supabase.from("predictions").insert({
-      user_id: context.userId,
-      symbol: data.symbol,
-      interval: data.interval,
-      anchor_time: data.anchor_time,
-      horizon_candles: data.horizon_candles,
-      predicted_candles: data.predicted_candles,
-      indicators_snapshot: data.indicators_snapshot ?? null,
-      patterns_snapshot: data.patterns_snapshot ?? null,
-      rationale: data.rationale ?? null,
-      confidence: data.confidence ?? null,
-      model: data.model ?? null,
-    }).select().single();
-    if (error) throw new Error(error.message);
-    return row;
-  });
-
-export const listPredictions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
-      .from("predictions")
-      .select("*")
-      .order("made_at", { ascending: false })
-      .limit(50);
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  });
-
-// Historical reliability: aggregates real evaluated outcomes (predictions that have
-// already been checked against what actually happened) so the person can see the
-// AI's actual track record instead of trusting each new forecast on faith.
-export const getPredictionStats = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data: preds, error: e1 } = await context.supabase
-      .from("predictions")
-      .select("id")
-      .limit(2000);
-    if (e1) throw new Error(e1.message);
-    const ids = (preds ?? []).map((p) => p.id);
-    if (ids.length === 0) {
-      return { evaluated: 0, directionCorrect: 0, directionAccuracy: null, avgMape: null };
-    }
-    const { data: evals, error: e2 } = await context.supabase
-      .from("prediction_evaluations")
-      .select("direction_correct, mape")
-      .in("prediction_id", ids);
-    if (e2) throw new Error(e2.message);
-    const rows = (evals ?? []).filter((e) => e.direction_correct !== null);
-    if (rows.length === 0) {
-      return { evaluated: 0, directionCorrect: 0, directionAccuracy: null, avgMape: null };
-    }
-    const correct = rows.filter((r) => r.direction_correct).length;
-    const mapeValues = rows.map((r) => r.mape).filter((m): m is number => m != null);
-    const avgMape = mapeValues.length > 0 ? mapeValues.reduce((a, b) => a + b, 0) / mapeValues.length : null;
-    return {
-      evaluated: rows.length,
-      directionCorrect: correct,
-      directionAccuracy: correct / rows.length,
-      avgMape,
-    };
-  });
-
-const DeletePredictionInput = z.object({ id: z.string().uuid() });
-export const deletePrediction = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => DeletePredictionInput.parse(raw))
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("predictions").delete().eq("id", data.id);
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-// Evaluate prediction: fetch real candles after anchor and compare
-const EvaluateInput = z.object({ prediction_id: z.string().uuid() });
-export const evaluatePrediction = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => EvaluateInput.parse(raw))
-  .handler(async ({ data, context }) => {
-    const { data: pred, error } = await context.supabase.from("predictions").select("*").eq("id", data.prediction_id).single();
-    if (error || !pred) throw new Error(error?.message ?? "Not found");
-    const predicted = pred.predicted_candles as unknown as Candle[];
-    const stepSec = intervalSeconds(pred.interval);
-    const range = pred.interval === "1h" ? "3mo" : pred.interval === "1wk" ? "5y" : "2y";
-    const all = await fetchHistory(pred.symbol, pred.interval, range);
-    const actual = all.filter((c) => c.time > pred.anchor_time && c.time <= pred.anchor_time + stepSec * pred.horizon_candles);
-    if (actual.length === 0) {
-      return { pending: true, actual_candles: [], mape: null, direction_correct: null, max_error: null };
-    }
-    const n = Math.min(predicted.length, actual.length);
-    let sumPct = 0, maxErr = 0;
-    for (let i = 0; i < n; i++) {
-      const err = Math.abs(actual[i].close - predicted[i].close) / actual[i].close;
-      sumPct += err;
-      if (err > maxErr) maxErr = err;
-    }
-    const mape = (sumPct / n) * 100;
-    const anchorClose = pred.anchor_time; // placeholder
-    // Direction: sign of (last predicted close - anchor implied close) vs (actual last close - actual first open)
-    const predDir = predicted[n - 1].close - predicted[0].open;
-    const actDir = actual[n - 1].close - actual[0].open;
-    const direction_correct = Math.sign(predDir) === Math.sign(actDir);
-    void anchorClose;
-
-    // Upsert evaluation
-    await context.supabase.from("prediction_evaluations").delete().eq("prediction_id", pred.id);
-    const { data: ev, error: e2 } = await context.supabase.from("prediction_evaluations").insert({
-      prediction_id: pred.id,
-      direction_correct, mape, max_error: maxErr * 100, actual_candles: actual as unknown as never,
-    }).select().single();
-    if (e2) throw new Error(e2.message);
-    return ev;
+export const fetchActualCandles = createServerFn({ method: "POST" })
+  .inputValidator((raw: unknown) => ActualCandlesInput.parse(raw))
+  .handler(async ({ data }) => {
+    const stepSec = intervalSeconds(data.interval);
+    const range = data.interval === "1h" ? "3mo" : data.interval === "1wk" ? "5y" : "2y";
+    const all = await fetchHistory(data.symbol, data.interval, range);
+    const actual = all.filter((c) => c.time > data.anchor_time && c.time <= data.anchor_time + stepSec * data.horizon_candles);
+    return { actual };
   });
 
 // Backtest: pick historical anchor, forecast as-of that date, compare to real
@@ -428,7 +317,6 @@ const BacktestInput = z.object({
   language: LanguageSchema.default("it"),
 });
 export const runBacktest = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => BacktestInput.parse(raw))
   .handler(async ({ data }) => {
     const range = data.interval === "1h" ? "2y" : data.interval === "1wk" ? "max" : "10y";
@@ -465,33 +353,4 @@ export const runBacktest = createServerFn({ method: "POST" })
       confidence: forecast.confidence,
       metrics: { mape, max_error: maxErr * 100, direction_correct, evaluated_points: n },
     };
-  });
-
-// Watchlist
-export const listWatchlist = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { data, error } = await context.supabase.from("watchlist").select("*").order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return data ?? [];
-  });
-
-const AddWatchInput = z.object({ symbol: z.string().min(1).max(20).transform((s) => s.trim().toUpperCase()), note: z.string().max(200).optional() });
-export const addWatchlist = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => AddWatchInput.parse(raw))
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("watchlist").upsert({ user_id: context.userId, symbol: data.symbol, note: data.note ?? null }, { onConflict: "user_id,symbol" });
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-const RemoveWatchInput = z.object({ symbol: z.string() });
-export const removeWatchlist = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((raw: unknown) => RemoveWatchInput.parse(raw))
-  .handler(async ({ data, context }) => {
-    const { error } = await context.supabase.from("watchlist").delete().eq("symbol", data.symbol);
-    if (error) throw new Error(error.message);
-    return { ok: true };
   });

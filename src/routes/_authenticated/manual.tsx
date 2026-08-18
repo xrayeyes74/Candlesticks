@@ -8,7 +8,8 @@ import { Brain, Save, Plus, Trash2, ClipboardPaste, ArrowLeft, ImagePlus, Camera
 import { summarize, sma, ema, bollinger } from "@/lib/ta/indicators";
 import { detectPatterns } from "@/lib/ta/patterns";
 import type { Candle } from "@/lib/ta/types";
-import { generateForecastFromCandles, savePrediction } from "@/lib/forecast.functions";
+import { generateForecastFromCandles } from "@/lib/forecast.functions";
+import { savePredictionLocal } from "@/lib/local-storage";
 import { extractCandlesFromImage } from "@/lib/vision.functions";
 import { CandlestickChartView } from "@/components/CandlestickChartView";
 import { DirectionalProbability } from "@/components/DirectionalProbability";
@@ -33,7 +34,7 @@ const INTERVALS = [
 
 interface Row {
   id: string;
-  date: string; // datetime-local string
+  date: string;
   open: string;
   high: string;
   low: string;
@@ -43,7 +44,7 @@ interface Row {
 
 interface CalibRow {
   id: string;
-  position: string; // 1-based, counting from the left
+  position: string;
   open: string;
   high: string;
   low: string;
@@ -77,7 +78,6 @@ function ManualEntryPage() {
   const [showSMA, setShowSMA] = useState(true);
   const [showBB, setShowBB] = useState(false);
 
-  // -- Photo-assisted entry --
   const [photoOpen, setPhotoOpen] = useState(false);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [totalCandlesVisible, setTotalCandlesVisible] = useState("30");
@@ -89,8 +89,6 @@ function ManualEntryPage() {
   const extractFn = useServerFn(extractCandlesFromImage);
 
   function onPhotoSelected(file: File) {
-    // Phone photos are often 3-10MB — well over Vercel's ~4.5MB request body
-    // limit once base64-encoded. Downscale + recompress client-side first.
     const img = new Image();
     const reader = new FileReader();
     reader.onload = () => {
@@ -146,7 +144,6 @@ function ManualEntryPage() {
   });
 
   const forecastFn = useServerFn(generateForecastFromCandles);
-  const saveFn = useServerFn(savePrediction);
   const qc = useQueryClient();
 
   function addRow() {
@@ -187,13 +184,12 @@ function ManualEntryPage() {
     toast.success(t("manual.rowsAdded", { count: newRows.length }));
   }
 
-  // Parse + validate rows into Candle[]
   const { candles, errors } = useMemo(() => {
     const out: Candle[] = [];
     const errs: string[] = [];
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      if (!row.open && !row.high && !row.low && !row.close) continue; // skip fully empty rows silently
+      if (!row.open && !row.high && !row.low && !row.close) continue;
       const o = parseFloat(row.open), h = parseFloat(row.high), l = parseFloat(row.low), c = parseFloat(row.close);
       const v = row.volume ? parseFloat(row.volume) : 0;
       const time = Math.floor(new Date(row.date).getTime() / 1000);
@@ -258,21 +254,19 @@ function ManualEntryPage() {
   });
 
   const saveMut = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       if (!fcMut.data) throw new Error(t("manual.genPredictionFirst"));
-      return saveFn({
-        data: {
-          symbol: symbol.trim() || "MANUALE",
-          interval: interval.value,
-          anchor_time: fcMut.data.anchor.time,
-          horizon_candles: horizon,
-          predicted_candles: fcMut.data.candles,
-          indicators_snapshot: analysis?.indicators,
-          patterns_snapshot: analysis?.patterns,
-          rationale: fcMut.data.rationale,
-          confidence: fcMut.data.confidence,
-          model: fcMut.data.model,
-        },
+      return savePredictionLocal({
+        symbol: symbol.trim() || "MANUALE",
+        interval: interval.value,
+        anchor_time: fcMut.data.anchor.time,
+        horizon_candles: horizon,
+        predicted_candles: fcMut.data.candles,
+        indicators_snapshot: analysis?.indicators,
+        patterns_snapshot: analysis?.patterns,
+        rationale: fcMut.data.rationale,
+        confidence: fcMut.data.confidence,
+        model: fcMut.data.model,
       });
     },
     onSuccess: () => { toast.success(t("analyze.predictionSaved")); qc.invalidateQueries({ queryKey: ["predictions"] }); },
@@ -294,7 +288,6 @@ function ManualEntryPage() {
         </p>
       </div>
 
-      {/* Metadata */}
       <div className="rounded-xl border border-border bg-card p-5 grid gap-4 sm:grid-cols-2">
         <div>
           <label className="text-xs text-muted-foreground">{t("manual.symbolLabel")}</label>
@@ -317,7 +310,6 @@ function ManualEntryPage() {
         </div>
       </div>
 
-      {/* Photo-assisted entry */}
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.photoSectionTitle")}</h3>
@@ -405,7 +397,6 @@ function ManualEntryPage() {
         )}
       </div>
 
-      {/* Table */}
       <div className="rounded-xl border border-border bg-card p-5">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("manual.candlesCount", { valid: candles.length, total: rows.length })}</h3>
@@ -483,7 +474,6 @@ function ManualEntryPage() {
         )}
       </div>
 
-      {/* Chart + analysis */}
       {candles.length >= 2 && analysis && (
         <>
           <div className="flex items-center gap-2 text-xs">

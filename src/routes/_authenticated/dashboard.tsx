@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listWatchlist, addWatchlist, removeWatchlist, listPredictions } from "@/lib/forecast.functions";
 import { searchSymbols } from "@/lib/market.functions";
+import { getWatchlist, addToWatchlist, removeFromWatchlist, getPredictions } from "@/lib/local-storage";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -17,14 +17,10 @@ function Dashboard() {
   const { t } = useTranslation();
   const router = useRouter();
   const qc = useQueryClient();
-  const listWl = useServerFn(listWatchlist);
-  const addWl = useServerFn(addWatchlist);
-  const rmWl = useServerFn(removeWatchlist);
-  const listPr = useServerFn(listPredictions);
   const search = useServerFn(searchSymbols);
 
-  const wl = useQuery({ queryKey: ["watchlist"], queryFn: () => listWl() });
-  const preds = useQuery({ queryKey: ["predictions"], queryFn: () => listPr() });
+  const wl = useQuery({ queryKey: ["watchlist"], queryFn: () => getWatchlist() });
+  const preds = useQuery({ queryKey: ["predictions"], queryFn: () => getPredictions() });
 
   const [q, setQ] = useState("");
   const [results, setResults] = useState<any[]>([]);
@@ -48,12 +44,11 @@ function Dashboard() {
   }
 
   const addM = useMutation({
-    mutationFn: (symbol: string) => addWl({ data: { symbol } }),
+    mutationFn: async (symbol: string) => addToWatchlist(symbol),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["watchlist"] }); toast.success(t("dashboard.addedToWatchlist")); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : t("common.error")),
   });
   const rmM = useMutation({
-    mutationFn: (symbol: string) => rmWl({ data: { symbol } }),
+    mutationFn: async (symbol: string) => removeFromWatchlist(symbol),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["watchlist"] }),
   });
 

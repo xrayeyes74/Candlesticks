@@ -7,8 +7,6 @@ export const Route = createFileRoute("/privacy")({
   head: () => ({ meta: [{ title: "Privacy Policy — Candlestick AI" }] }),
 });
 
-// Contact used throughout the policy. Change this to your real support email
-// before publishing — Google Play requires a working contact channel.
 const CONTACT_EMAIL = "xrayeyes74@gmail.com";
 const LAST_UPDATED = "16 agosto 2026";
 
@@ -24,7 +22,7 @@ function PrivacyPage() {
           <span>Candlestick AI</span>
         </Link>
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="h-4 w-4" /> {isItalian ? "Home" : "Home"}
+          <ArrowLeft className="h-4 w-4" /> Home
         </Link>
       </header>
 
@@ -44,89 +42,51 @@ function PrivacyIT() {
       </div>
 
       <p>
-        Questa informativa descrive quali dati raccoglie Candlestick AI ("l'app"), come vengono usati e con chi vengono
-        condivisi. Usando l'app accetti le pratiche descritte qui sotto.
+        Candlestick AI ("l'app") <strong>non richiede un account e non ha un proprio server dove salvare i tuoi dati
+        personali</strong>. Questa informativa spiega esattamente quali dati passano attraverso l'app e dove vanno a finire.
       </p>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">1. Titolare del trattamento</h2>
+        <h2 className="text-lg font-semibold text-foreground">1. Contatto</h2>
+        <p>Per qualsiasi domanda su questa informativa, scrivi a: <strong>{CONTACT_EMAIL}</strong>.</p>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold text-foreground">2. Dati salvati solo sul tuo dispositivo</h2>
         <p>
-          Per qualsiasi domanda su questa informativa o sui tuoi dati, puoi scrivere a: <strong>{CONTACT_EMAIL}</strong>.
+          La tua watchlist e le previsioni che salvi restano <strong>esclusivamente nella memoria locale del tuo
+          browser/dispositivo</strong> (localStorage) — non vengono mai inviati o salvati su nessun server. Se disinstalli
+          l'app o cancelli i dati del browser, questi dati vengono persi in modo permanente e noi non possiamo recuperarli
+          (perché non li abbiamo mai avuti).
         </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">2. Dati che raccogliamo</h2>
+        <h2 className="text-lg font-semibold text-foreground">3. Dati inviati a servizi di terze parti (per far funzionare l'app)</h2>
+        <p>Quando usi le funzioni dell'app, alcuni dati vengono inviati temporaneamente a questi fornitori, solo per l'elaborazione della singola richiesta — non li conserviamo noi:</p>
         <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Dati account:</strong> email e password (o dati base del profilo Google se accedi con Google), gestiti tramite Supabase Auth.</li>
-          <li><strong>Dati d'uso dell'app:</strong> simboli/titoli che analizzi, watchlist salvata, previsioni salvate (inclusi valori numerici, orizzonte temporale, e il testo generato dall'AI).</li>
-          <li><strong>Foto caricate (funzione opzionale):</strong> se usi "Inserimento manuale → Carica foto", l'immagine viene inviata a un servizio di intelligenza artificiale per l'elaborazione (vedi punto 3) e <strong>non viene conservata sui nostri server</strong> dopo l'elaborazione — solo i valori numerici che scegli di salvare vengono mantenuti.</li>
-          <li><strong>Dati tecnici:</strong> indirizzo IP, tipo di dispositivo, identificativi pubblicitari (solo se usi la versione app con annunci), raccolti automaticamente per il funzionamento del servizio e della pubblicità.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">3. Servizi di terze parti con cui condividiamo dati</h2>
-        <p>Per far funzionare l'app, alcuni dati vengono inviati a questi fornitori, ciascuno con la propria informativa privacy:</p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Supabase</strong> — hosting del database e autenticazione utenti.</li>
           <li><strong>Vercel</strong> — hosting dell'applicazione web.</li>
-          <li><strong>Twelve Data</strong> — fornisce i dati di mercato (prezzi storici, quotazioni); riceve il simbolo del titolo che cerchi o analizzi, non dati che ti identificano personalmente.</li>
-          <li><strong>Groq</strong> — genera le previsioni AI; riceve i dati storici dei prezzi e degli indicatori tecnici del titolo analizzato, non dati che ti identificano personalmente.</li>
-          <li><strong>Google Gemini</strong> — usato solo se carichi una foto di un grafico; riceve l'immagine caricata per stimarne i valori.</li>
-          <li><strong>Google AdMob</strong> — se usi la versione con annunci pubblicitari, raccoglie identificativi pubblicitari, indirizzo IP e dati d'interazione con gli annunci per mostrare pubblicità pertinente. Puoi gestire le preferenze pubblicitarie dalle impostazioni del tuo dispositivo Android (Google → Annunci).</li>
+          <li><strong>Twelve Data</strong> — riceve il simbolo del titolo che cerchi o analizzi, per fornirti dati di mercato.</li>
+          <li><strong>Groq</strong> — riceve i dati storici dei prezzi e degli indicatori tecnici del titolo analizzato, per generare la previsione AI.</li>
+          <li><strong>Google Gemini</strong> — usato solo se carichi una foto di un grafico; riceve l'immagine per stimarne i valori.</li>
+          <li><strong>Google AdMob</strong> — se usi la versione con annunci, raccoglie identificativi pubblicitari, indirizzo IP e dati d'interazione con gli annunci. Puoi gestire le preferenze pubblicitarie dalle impostazioni del tuo dispositivo Android (Google → Annunci).</li>
         </ul>
+        <p>Nessuno di questi dati è collegato a un tuo account, perché l'app non ne ha uno.</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">4. Perché usiamo questi dati</h2>
-        <p>
-          Esclusivamente per fornire le funzionalità dell'app: mostrarti dati di mercato, generare previsioni AI,
-          salvare la tua watchlist e le previsioni, farti accedere in sicurezza, e (solo nella versione con annunci)
-          mostrarti pubblicità. Non vendiamo i tuoi dati personali a terzi.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">4. Sicurezza</h2>
+        <p>Tutte le comunicazioni con l'app avvengono tramite connessioni cifrate (HTTPS).</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">5. Conservazione e cancellazione dei dati</h2>
-        <p>
-          I dati del tuo account (watchlist, previsioni salvate) restano fino a quando non richiedi la cancellazione.
-          Per cancellare il tuo account e tutti i dati associati, scrivi a <strong>{CONTACT_EMAIL}</strong> — la richiesta
-          verrà evasa entro un tempo ragionevole.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">5. Età minima</h2>
+        <p>L'app non è destinata a minori di 18 anni.</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">6. Sicurezza</h2>
-        <p>
-          I dati sono protetti tramite connessioni cifrate (HTTPS) e regole di accesso a livello di riga (Row Level
-          Security) sul database, che impediscono a un utente di vedere i dati di un altro utente.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">7. Età minima</h2>
-        <p>
-          L'app non è destinata a minori di 18 anni e non raccoglie consapevolmente dati da minori. Se sei un genitore
-          e ritieni che tuo figlio ci abbia fornito dati personali, contattaci per la rimozione.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">8. I tuoi diritti</h2>
-        <p>
-          Puoi richiedere in qualsiasi momento l'accesso, la correzione o la cancellazione dei tuoi dati personali
-          scrivendo a <strong>{CONTACT_EMAIL}</strong>. Se ti trovi nell'Unione Europea, hai i diritti previsti dal
-          Regolamento Generale sulla Protezione dei Dati (GDPR).
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">9. Modifiche a questa informativa</h2>
-        <p>
-          Possiamo aggiornare questa informativa nel tempo. La data di "ultimo aggiornamento" in cima alla pagina
-          riflette l'ultima revisione.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">6. Modifiche a questa informativa</h2>
+        <p>Possiamo aggiornare questa informativa nel tempo. La data di "ultimo aggiornamento" in cima alla pagina riflette l'ultima revisione.</p>
       </section>
 
       <p className="text-xs pt-4 border-t border-border">
@@ -146,87 +106,50 @@ function PrivacyEN() {
       </div>
 
       <p>
-        This policy describes what data Candlestick AI ("the app") collects, how it's used, and who it's shared
-        with. By using the app you agree to the practices described below.
+        Candlestick AI ("the app") <strong>does not require an account and has no server of its own where your
+        personal data is stored</strong>. This policy explains exactly what data flows through the app and where it goes.
       </p>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">1. Data controller</h2>
-        <p>For any question about this policy or your data, contact: <strong>{CONTACT_EMAIL}</strong>.</p>
+        <h2 className="text-lg font-semibold text-foreground">1. Contact</h2>
+        <p>For any question about this policy, write to: <strong>{CONTACT_EMAIL}</strong>.</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">2. Data we collect</h2>
-        <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Account data:</strong> email and password (or basic Google profile data if you sign in with Google), managed via Supabase Auth.</li>
-          <li><strong>App usage data:</strong> symbols/stocks you analyze, your saved watchlist, saved predictions (including numeric values, time horizon, and AI-generated text).</li>
-          <li><strong>Uploaded photos (optional feature):</strong> if you use "Manual entry → Load photo", the image is sent to an AI service for processing (see section 3) and <strong>is not stored on our servers</strong> after processing — only the numeric values you choose to save are kept.</li>
-          <li><strong>Technical data:</strong> IP address, device type, advertising identifiers (only in the ad-supported version), collected automatically to operate the service and ads.</li>
-        </ul>
+        <h2 className="text-lg font-semibold text-foreground">2. Data kept only on your device</h2>
+        <p>
+          Your watchlist and saved predictions live <strong>exclusively in your browser/device's local storage</strong> —
+          they are never sent to or stored on any server. If you uninstall the app or clear your browser data, this
+          data is permanently lost and we cannot recover it (because we never had it).
+        </p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">3. Third-party services we share data with</h2>
-        <p>To make the app work, some data is sent to these providers, each with its own privacy policy:</p>
+        <h2 className="text-lg font-semibold text-foreground">3. Data sent to third-party services (to make the app work)</h2>
+        <p>When you use the app's features, some data is sent temporarily to these providers, only to process that specific request — we don't keep it ourselves:</p>
         <ul className="list-disc pl-5 space-y-1">
-          <li><strong>Supabase</strong> — database hosting and user authentication.</li>
           <li><strong>Vercel</strong> — web application hosting.</li>
-          <li><strong>Twelve Data</strong> — provides market data (historical prices, quotes); receives the symbol you search or analyze, not personally identifying data.</li>
-          <li><strong>Groq</strong> — generates AI forecasts; receives historical price data and technical indicators for the analyzed symbol, not personally identifying data.</li>
-          <li><strong>Google Gemini</strong> — used only if you upload a chart photo; receives the uploaded image to estimate its values.</li>
-          <li><strong>Google AdMob</strong> — if you use the ad-supported version, it collects advertising identifiers, IP address, and ad interaction data to show relevant ads. You can manage ad preferences from your Android device settings (Google → Ads).</li>
+          <li><strong>Twelve Data</strong> — receives the symbol you search or analyze, to provide market data.</li>
+          <li><strong>Groq</strong> — receives historical price data and technical indicators for the analyzed symbol, to generate the AI forecast.</li>
+          <li><strong>Google Gemini</strong> — used only if you upload a chart photo; receives the image to estimate its values.</li>
+          <li><strong>Google AdMob</strong> — if you use the ad-supported version, it collects advertising identifiers, IP address, and ad interaction data. You can manage ad preferences from your Android device settings (Google → Ads).</li>
         </ul>
+        <p>None of this data is linked to an account, because the app doesn't have one.</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">4. Why we use this data</h2>
-        <p>
-          Exclusively to provide the app's features: showing you market data, generating AI forecasts, saving your
-          watchlist and predictions, letting you sign in securely, and (ad-supported version only) showing ads. We
-          do not sell your personal data to third parties.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">4. Security</h2>
+        <p>All communication with the app happens over encrypted connections (HTTPS).</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">5. Data retention and deletion</h2>
-        <p>
-          Your account data (watchlist, saved predictions) is kept until you request deletion. To delete your
-          account and all associated data, write to <strong>{CONTACT_EMAIL}</strong> — the request will be processed
-          within a reasonable time.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">5. Minimum age</h2>
+        <p>The app is not intended for anyone under 18.</p>
       </section>
 
       <section>
-        <h2 className="text-lg font-semibold text-foreground">6. Security</h2>
-        <p>
-          Data is protected via encrypted connections (HTTPS) and Row Level Security rules on the database, which
-          prevent one user from seeing another user's data.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">7. Minimum age</h2>
-        <p>
-          The app is not intended for anyone under 18 and does not knowingly collect data from minors. If you are a
-          parent and believe your child has provided us with personal data, contact us for removal.
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">8. Your rights</h2>
-        <p>
-          You can request access, correction, or deletion of your personal data at any time by writing to{" "}
-          <strong>{CONTACT_EMAIL}</strong>. If you are in the European Union, you have rights under the General Data
-          Protection Regulation (GDPR).
-        </p>
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold text-foreground">9. Changes to this policy</h2>
-        <p>
-          We may update this policy over time. The "last updated" date at the top of the page reflects the latest
-          revision.
-        </p>
+        <h2 className="text-lg font-semibold text-foreground">6. Changes to this policy</h2>
+        <p>We may update this policy over time. The "last updated" date at the top of the page reflects the latest revision.</p>
       </section>
 
       <p className="text-xs pt-4 border-t border-border">

@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listPredictions, evaluatePrediction, deletePrediction, getPredictionStats } from "@/lib/forecast.functions";
+import { fetchActualCandles } from "@/lib/forecast.functions";
+import { getPredictions, deletePredictionLocal, saveEvaluation, getPredictionStatsLocal } from "@/lib/local-storage";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, XCircle, Clock, Trash2, RefreshCw, ArrowRight } from "lucide-react";
@@ -13,16 +14,38 @@ export const Route = createFileRoute("/_authenticated/predictions")({
 
 function PredictionsPage() {
   const { t, i18n } = useTranslation();
-  const listP = useServerFn(listPredictions);
-  const evalFn = useServerFn(evaluatePrediction);
-  const delFn = useServerFn(deletePrediction);
-  const statsFn = useServerFn(getPredictionStats);
+  const fetchActual = useServerFn(fetchActualCandles);
   const qc = useQueryClient();
-  const preds = useQuery({ queryKey: ["predictions"], queryFn: () => listP() });
-  const stats = useQuery({ queryKey: ["prediction-stats"], queryFn: () => statsFn() });
+  const preds = useQuery({ queryKey: ["predictions"], queryFn: () => getPredictions() });
+  const stats = useQuery({ queryKey: ["prediction-stats"], queryFn: () => getPredictionStatsLocal() });
 
   const evalMut = useMutation({
-    mutationFn: (id: string) => evalFn({ data: { prediction_id: id } }),
+    mutationFn: async (id: string) => {
+      const pred = getPredictions().find((p) => p.id === id);
+      if (!pred) throw new Error("Not found");
+      const { actual } = await fetchActual({
+        data: { symbol: pred.symbol, interval: pred.interval, anchor_time: pred.anchor_time, horizon_candles: pred.horizon_candles },
+      });
+      if (actual.length === 0) {
+        const evaluation = { direction_correct: null, mape: null, max_error: null, actual_candles: [], evaluated_at: new Date().toISOString() };
+        return { id, evaluation, pending: true };
+      }
+      const predicted = pred.predicted_candles;
+      const n = Math.min(predicted.length, actual.length);
+      let sumPct = 0, maxErr = 0;
+      for (let i = 0; i < n; i++) {
+        const err = Math.abs(actual[i].close - predicted[i].close) / actual[i].close;
+        sumPct += err;
+        if (err > maxErr) maxErr = err;
+      }
+      const mape = (sumPct / n) * 100;
+      const predDir = predicted[n - 1].close - predicted[0].open;
+      const actDir = actual[n - 1].close - actual[0].open;
+      const direction_correct = Math.sign(predDir) === Math.sign(actDir);
+      const evaluation = { direction_correct, mape, max_error: maxErr * 100, actual_candles: actual, evaluated_at: new Date().toISOString() };
+      saveEvaluation(id, evaluation);
+      return { id, evaluation, pending: false };
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["predictions"] });
       qc.invalidateQueries({ queryKey: ["prediction-stats"] });
@@ -31,7 +54,7 @@ function PredictionsPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : t("predictions.evaluationError")),
   });
   const delMut = useMutation({
-    mutationFn: (id: string) => delFn({ data: { id } }),
+    mutationFn: async (id: string) => deletePredictionLocal(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["predictions"] }),
   });
 
@@ -80,7 +103,7 @@ function PredictionsPage() {
       )}
 
       <div className="space-y-3">
-        {(preds.data ?? []).map((p: any) => (
+        {(preds.data ?? []).map((p) => (
           <div key={p.id} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
@@ -97,9 +120,7 @@ function PredictionsPage() {
               </div>
             </div>
 
-            {evalMut.data && evalMut.variables === p.id && (
-              <EvalResult ev={evalMut.data as any} />
-            )}
+            {p.evaluation && <EvalResult ev={p.evaluation} />}
           </div>
         ))}
       </div>
@@ -107,9 +128,9 @@ function PredictionsPage() {
   );
 }
 
-function EvalResult({ ev }: { ev: any }) {
+function EvalResult({ ev }: { ev: NonNullable<ReturnType<typeof getPredictions>[number]["evaluation"]> }) {
   const { t } = useTranslation();
-  if (ev.pending) return <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {t("predictions.pendingHistory")}</div>;
+  if (ev.direction_correct === null) return <div className="mt-3 flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" /> {t("predictions.pendingHistory")}</div>;
   return (
     <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
       <div className="rounded-md border border-border/60 p-2">

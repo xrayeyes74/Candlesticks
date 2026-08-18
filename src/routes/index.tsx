@@ -24,7 +24,7 @@ function Landing() {
         </div>
         <div className="flex items-center gap-3">
           <LanguageSwitcher />
-          <Link to="/auth" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.cta")}</Link>
+          <Link to="/dashboard" className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.cta")}</Link>
         </div>
       </header>
 
@@ -39,7 +39,7 @@ function Landing() {
           {t("landing.subtitle")}
         </p>
         <div className="mt-8 flex justify-center gap-3">
-          <Link to="/auth" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.start")}</Link>
+          <Link to="/dashboard" className="rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground hover:opacity-90">{t("landing.start")}</Link>
           <a href="#features" className="rounded-md border border-border px-5 py-3 text-sm hover:bg-accent">{t("landing.howItWorks")}</a>
         </div>
       </section>
@@ -54,8 +54,9 @@ function Landing() {
       </section>
 
       <footer className="border-t border-border/60">
-        <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-muted-foreground text-center">
-          {t("landing.footer")}
+        <div className="mx-auto max-w-6xl px-4 py-6 text-xs text-muted-foreground text-center space-y-2">
+          <p>{t("landing.footer")}</p>
+          <p><Link to="/privacy" className="hover:underline">Privacy Policy</Link></p>
         </div>
       </footer>
     </div>

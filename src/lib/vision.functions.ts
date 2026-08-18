@@ -11,9 +11,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { generateText, Output } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const VISION_MODEL = process.env.VISION_MODEL || "gemini-2.5-flash";
+const VISION_MODEL = process.env.VISION_MODEL || "gemini-3.6-flash";
 const VISION_BASE_URL = process.env.VISION_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
 
 const CandleOut = z.object({
@@ -43,7 +42,6 @@ const ExtractInput = z.object({
 });
 
 export const extractCandlesFromImage = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw: unknown) => ExtractInput.parse(raw))
   .handler(async ({ data }) => {
     const apiKey = process.env.VISION_API_KEY;
