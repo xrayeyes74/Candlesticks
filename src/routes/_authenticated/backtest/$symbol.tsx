@@ -54,7 +54,7 @@ function BacktestPage() {
         </div>
         <div>
           <label className="text-xs text-muted-foreground">{t("backtest.horizon")}</label>
-          <input type="number" min={3} max={60} value={horizon} onChange={(e) => setHorizon(Math.max(3, Math.min(60, +e.target.value || 10)))} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          <input type="number" min={3} max={60} value={horizon} onChange={(e) => setHorizon(+e.target.value)} onBlur={(e) => setHorizon(Math.max(3, Math.min(60, +e.target.value || 10)))} className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
         </div>
         <div className="flex items-end">
           <button onClick={() => mut.mutate()} disabled={mut.isPending} className="w-full inline-flex items-center justify-center gap-1.5 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">

@@ -259,7 +259,7 @@ function ManualEntryPage() {
       return savePredictionLocal({
         symbol: symbol.trim() || "MANUALE",
         interval: interval.value,
-        anchor_time: fcMut.data.anchor.time,
+        anchor_time: fcMut.data.anchor.time, anchor_close: fcMut.data.anchor.close,
         horizon_candles: horizon,
         predicted_candles: fcMut.data.candles,
         indicators_snapshot: analysis?.indicators,

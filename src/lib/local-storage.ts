@@ -22,7 +22,7 @@ export interface SavedPrediction {
   symbol: string;
   interval: string;
   made_at: string;
-  anchor_time: number;
+  anchor_time: number; anchor_close: number;
   horizon_candles: number;
   predicted_candles: Candle[];
   indicators_snapshot?: unknown;

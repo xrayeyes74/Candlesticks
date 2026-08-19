@@ -39,8 +39,8 @@ function PredictionsPage() {
         if (err > maxErr) maxErr = err;
       }
       const mape = (sumPct / n) * 100;
-      const predDir = predicted[n - 1].close - predicted[0].open;
-      const actDir = actual[n - 1].close - actual[0].open;
+      const predDir = predicted[n - 1].close - pred.anchor_close;
+      const actDir = actual[n - 1].close - pred.anchor_close;
       const direction_correct = Math.sign(predDir) === Math.sign(actDir);
       const evaluation = { direction_correct, mape, max_error: maxErr * 100, actual_candles: actual, evaluated_at: new Date().toISOString() };
       saveEvaluation(id, evaluation);

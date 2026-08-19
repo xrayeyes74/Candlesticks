@@ -54,7 +54,7 @@ function AnalyzePage() {
       if (!fcMut.data || !data.data) throw new Error(t("manual.genPredictionFirst"));
       return savePredictionLocal({
         symbol, interval,
-        anchor_time: fcMut.data.anchor.time,
+        nchor_time: fcMut.data.anchor.time, anchor_close: fcMut.data.anchor.close,
         horizon_candles: horizon,
         predicted_candles: fcMut.data.candles,
         indicators_snapshot: data.data.analysis.indicators,
