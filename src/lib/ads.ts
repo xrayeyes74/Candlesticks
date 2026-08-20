@@ -8,7 +8,7 @@ import { Capacitor } from "@capacitor/core";
 const TEST_BANNER_ID = "ca-app-pub-3940256099942544/6300978111";
 const PROD_BANNER_ID = "ca-app-pub-6563232891529127/5877247822";
 
-const USE_PROD_ADS = false; // ⚠️ flip to true ONLY for the Play Store release build
+const USE_PROD_ADS = true;
 
 let started = false;
 
