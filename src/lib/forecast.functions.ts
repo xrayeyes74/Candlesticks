@@ -335,8 +335,8 @@ export const runBacktest = createServerFn({ method: "POST" })
       if (err > maxErr) maxErr = err;
     }
     const mape = (sumPct / n) * 100;
-    const predDir = forecast.candles[n - 1].close - before[before.length - 1].close;
-    const actDir = after[n - 1].close - before[before.length - 1].close;
+        const predDir = forecast.candles[forecast.candles.length - 1].close - before[before.length - 1].close;
+    const actDir = after[after.length - 1].close - before[before.length - 1].close;
     const direction_correct = Math.sign(predDir) === Math.sign(actDir);
 
     return {

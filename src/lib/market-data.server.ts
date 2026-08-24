@@ -30,6 +30,9 @@ async function tdFetch(path: string, params: Record<string, string>): Promise<an
   const res = await fetch(`${TD_BASE}${path}?${qs.toString()}`);
   const j: any = await res.json();
   if (j?.status === "error" || (typeof j?.code === "number" && j.code >= 400)) {
+    if (j?.message && /available starting with|upgrading|grow or venture/i.test(j.message)) {
+      throw new Error("SYMBOL_NOT_SUPPORTED");
+    }
     throw new Error(j?.message || `Twelve Data error (HTTP ${res.status})`);
   }
   if (!res.ok) throw new Error(`Twelve Data HTTP ${res.status}`);

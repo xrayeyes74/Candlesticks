@@ -83,7 +83,8 @@
   "analyze": {
     "candleDuration": "Duración de la vela",
     "historicalPeriod": "Periodo histórico",
-    "insufficientData": "Historial demasiado corto para el análisis.",
+    "insufficientData": "Historial demasiado corto para el análisis.", 
+    "symbolNotSupported": "Este valor no está disponible en el plan gratuito del proveedor de datos.",
     "indicators": "Indicadores",
     "overallSignal": "Señal general",
     "trend": "Tendencia EMA9/21",

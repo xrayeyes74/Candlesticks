@@ -83,7 +83,8 @@
   "analyze": {
     "candleDuration": "Candle duration",
     "historicalPeriod": "Historical period",
-    "insufficientData": "History too short for analysis.",
+    "insufficientData": "History too short for analysis.", 
+    "symbolNotSupported": "This symbol isn't available on the market data provider's free plan.",
     "indicators": "Indicators",
     "overallSignal": "Overall signal",
     "trend": "EMA9/21 trend",

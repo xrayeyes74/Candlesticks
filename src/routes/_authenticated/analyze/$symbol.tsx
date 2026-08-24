@@ -129,7 +129,7 @@ function AnalyzePage() {
       </div>
 
       {data.isLoading && <div className="h-[460px] flex items-center justify-center text-muted-foreground">{t("common.loading")}</div>}
-      {data.error && <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive-foreground">{(data.error as Error).message}</div>}
+            {data.error && <div className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive-foreground">{(data.error as Error).message === "SYMBOL_NOT_SUPPORTED" ? t("analyze.symbolNotSupported") : (data.error as Error).message}</div>}
       {data.data && (
         <>
           <CandlestickChartView
